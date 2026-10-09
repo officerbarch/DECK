@@ -308,12 +308,18 @@ function formulir(kunci, parent, label) {
   const pilihanKartu = h('div', { class: 'warna' }, h('span', {}, 'Warna kartu:'),
     Object.keys(KARTU).map(k => {
       const b = h('button', { type: 'button', title: k, class: k === d.k ? 'pilih' : '', style: 'background:' + KARTU[k],
-        onclick: () => { d.k = k; pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
+        onclick: () => { d.k = k; pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); terapkan(); } });
       return b;
     }));
   const kirimBtn = h('button', { class: 'btn', type: 'submit' }, 'Kirim');
   const f = h('form', { class: 'isi', onsubmit: e => { e.preventDefault(); kirim(kunci, parent, kirimBtn); } },
     u, t, pilihan, pilihanKartu, h('div', { class: 'baris' }, hitung, kirimBtn));
+  // preview warna kartu: kartu 'Postingan baru' ikut berubah; pada balasan, kolom ketik diwarnai
+  const terapkan = () => {
+    if (kunci === 'baru') { const kt = f.closest('.kartu'); if (kt) kt.style.background = KARTU[d.k]; }
+    else t.style.background = KARTU[d.k];
+  };
+  if (kunci !== 'baru') terapkan();
   return f;
 }
 function tombolVote(p) {
@@ -368,9 +374,11 @@ function kartuUtama(p, balasan) {
 function render() {
   const dek = document.getElementById('dek'); dek.innerHTML = '';
   // kartu penulis baru
-  dek.append(h('div', { class: 'item' }, h('div', { class: 'kartu' },
+  const kartuBaru = h('div', { class: 'kartu' },
     h('div', { class: 'judul' }, 'Postingan baru'),
-    formulir('baru', '', 'Apa yang ingin Anda bagikan?'))));
+    formulir('baru', '', 'Apa yang ingin Anda bagikan?'));
+  kartuBaru.style.background = KARTU[draft.baru.k];
+  dek.append(h('div', { class: 'item' }, kartuBaru));
   const all = semua();
   const utama = all.filter(p => !p.parent).sort(urut);
   const anak = {};
