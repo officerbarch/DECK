@@ -18,7 +18,7 @@
   body { margin:0; background-color:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
            max-width:1200px; margin:0 auto; padding:22px 24px 10px; }
-  h1 { margin:0; font-size:clamp(14px, 3.6vw, 26px); font-weight:400; white-space:nowrap; }
+  h1 { margin:0; font-size:clamp(11px, 2.9vw, 26px); font-weight:400; white-space:nowrap; }
   h1 b { font-weight:700; }
   footer { max-width:1200px; margin:0 auto; padding:0 24px 16px; text-align:center; font-size:11px; color:var(--h); }
   #timer { font-size:14px; margin-bottom:6px; }
@@ -79,6 +79,7 @@
   .btn:disabled { opacity:.45; cursor:wait; }
   .btn.garis { background:var(--p); color:var(--h); padding:4px 10px; }
   .btn.garis:hover:not(:disabled) { background:var(--h); color:var(--p); }
+  .aksi .btn { font-weight:700; }
   .btn.garis.aktif { background:var(--h); color:var(--p); }
 
   /* tumpukan balasan */
@@ -118,7 +119,7 @@
 <canvas id="titik" aria-hidden="true"></canvas>
 
 <header>
-  <h1><b>D e c k</b> : Tempel tanya, tumpuk jawab, naikkan yang penting.</h1>
+  <h1><b>deck</b> : Tempel tanya, tumpuk jawab, naikkan yang penting.</h1>
   <div id="login"></div>
 </header>
 <nav id="alat"></nav>
@@ -419,8 +420,8 @@ function tombolVote(p) {
   const s = sayaVote[p.id] || 0;
   const klik = n => e => { e.stopPropagation(); vote(p.id, n, e.currentTarget); };
   return h('div', { class: 'aksi' },
-    h('button', { class: 'btn garis' + (s === 1 ? ' aktif' : ''), onclick: klik(1) }, 'Up ' + p.up),
-    h('button', { class: 'btn garis' + (s === -1 ? ' aktif' : ''), onclick: klik(-1) }, 'Down ' + p.down));
+    h('button', { class: 'btn garis' + (s === 1 ? ' aktif' : ''), onclick: klik(1), title: 'Naikkan', 'aria-label': 'Naikkan, ' + p.up + ' suara' }, '↑ ' + p.up),
+    h('button', { class: 'btn garis' + (s === -1 ? ' aktif' : ''), onclick: klik(-1), title: 'Turunkan', 'aria-label': 'Turunkan, ' + p.down + ' suara' }, '↓ ' + p.down));
 }
 const isiKartu = p => [
   h('div', { class: 'kepala' },
