@@ -3,22 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DECK</title>
+<title>deck</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-  :root { --h:#000; --p:#fff; --abu:#777; }
+  :root { --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
            max-width:1200px; margin:0 auto; padding:22px 24px 10px; }
   h1 { margin:0; font-size:40px; letter-spacing:1px; }
+  .tagline { margin:4px 0 0; font-size:15px; color:var(--h); }
+  footer { max-width:1200px; margin:0 auto; padding:0 24px 16px; text-align:center; font-size:11px; color:var(--h); }
   #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
 
   .dek { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:30px 26px;
-         align-items:start; max-width:1200px; margin:0 auto; padding:14px 24px 80px; }
+         align-items:start; max-width:1200px; margin:0 auto; padding:14px 24px 40px; }
 
   /* kartu */
-  .kartu { background:var(--p); border:2px solid var(--h); padding:16px 18px; box-shadow:4px 4px 0 var(--h); }
+  .kartu { background:var(--kuning); border:none; padding:16px 18px; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .nama { font-weight:700; font-size:16px; overflow-wrap:anywhere; }
@@ -28,7 +30,7 @@
   .bawah { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--abu); }
 
   /* tombol */
-  .btn { font:inherit; font-size:12px; background:var(--h); color:var(--p); border:2px solid var(--h);
+  .btn { font:inherit; font-size:12px; background:var(--h); color:var(--p); border:2px solid transparent;
          border-radius:0; padding:6px 14px; cursor:pointer; }
   .btn:hover:not(:disabled) { background:var(--p); color:var(--h); }
   .btn:disabled { opacity:.45; cursor:wait; }
@@ -38,16 +40,17 @@
 
   /* tumpukan balasan */
   .tumpukan { margin:12px 0 0 16px; }
-  .balas { border:2px solid var(--h); background:var(--p); margin-top:-2px; padding:12px 16px;
-           box-shadow:4px 4px 0 var(--h); position:relative; cursor:pointer; }
+  .balas { border:none; background:var(--kuning); margin-top:6px; padding:12px 16px;
+           position:relative; cursor:pointer; }
   .balas:first-child { margin-top:0; }
   .balas.tutup { height:74px; overflow:hidden; }
   .balas .teks { margin:8px 0 0; font-size:14px; }
 
   /* formulir */
   form.isi { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-  input[type=text], textarea { font:inherit; font-size:14px; border:2px solid var(--h); border-radius:0;
+  input[type=text], textarea { font:inherit; font-size:14px; border:none; border-radius:0;
                                padding:8px 10px; width:100%; background:var(--p); color:var(--h); }
+  input[type=text]:focus, textarea:focus { outline:1px solid var(--h); }
   textarea { min-height:84px; resize:vertical; }
   .baris { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; color:var(--abu); }
   .judul { font-weight:700; margin-bottom:2px; }
@@ -62,11 +65,15 @@
 <body>
 
 <header>
-  <h1>DECK</h1>
+  <div>
+    <h1>deck</h1>
+    <p class="tagline">Write it. Stack it. Rise to the top.</p>
+  </div>
   <div id="login"></div>
 </header>
 <div id="banner"></div>
 <main class="dek" id="dek"></main>
+<footer>by Nurfahmi Muchlis - Arsitektur ITS | 2026</footer>
 <div id="toast"></div>
 
 <script>
@@ -327,7 +334,6 @@ function render() {
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
   utama.forEach(p => dek.append(kartuUtama(p, (anak[p.id] || []).sort(urut))));
-  if (!utama.length) dek.append(h('div', { class: 'kosong' }, 'Belum ada postingan. Jadilah yang pertama!'));
 }
 
 /* ================== MULAI ================== */
