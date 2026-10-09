@@ -51,7 +51,8 @@
   .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
   .aksi { display:flex; gap:6px; flex-shrink:0; }
   .bawah { display:flex; align-items:center; gap:12px; font-size:14px; color:var(--abu); }
-  .item > .bawah { justify-content:center; margin-top:10px; }
+  .kartu.lain .bawah { order:4; justify-content:center; gap:8px; margin-top:6px; font-size:12px; }
+  .kartu.lain .bawah .btn { font-size:12px; padding:3px 10px; }
 
   /* bentuk selain persegi */
   .kartu.lain { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
@@ -465,10 +466,9 @@ function kartuUtama(p, balasan) {
   const bawah = h('div', { class: 'bawah' },
     h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
     h('span', {}, balasan.length ? balasan.length + ' balasan' : ''));
-  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), lain ? null : bawah);
+  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), bawah);
   kartu.style.background = `color-mix(in srgb, ${KARTU[p.kartu]} 92%, #000)`;   // lapisan paling belakang dalam deck
   item.append(kartu);
-  if (lain) item.append(bawah);
   if (balasTerbuka === p.id) item.append(kompos(p.id, p.id));
   if (balasan.length) {
     item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, balasan.length, balasan[i - 1]))));
