@@ -13,7 +13,6 @@
     --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176;
     --c-enam: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
     --c-lima: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
-    --c-segitiga: polygon(50% 0, 100% 100%, 0 100%);
   }
   * { box-sizing: border-box; }
   body { margin:0; background-color:var(--p); background-image:radial-gradient(#b5b5b5 1px, transparent 1.2px);
@@ -36,7 +35,8 @@
   .ikon.b-lingkaran { border-radius:50%; }
   .ikon.b-enam { clip-path:var(--c-enam); }
   .ikon.b-lima { clip-path:var(--c-lima); }
-  .ikon.b-segitiga { clip-path:var(--c-segitiga); }
+  .ikon.b-tumpul { border-radius:7px; height:22px; margin:6px 0; }
+  .ikon.kecil.b-tumpul { height:17px; margin:4px 0; border-radius:5px; }
 
   .dek { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:30px 26px;
          align-items:start; max-width:1200px; margin:0 auto; padding:14px 24px 40px; }
@@ -59,15 +59,13 @@
   .kartu.b-lingkaran { aspect-ratio:1; border-radius:50%; padding:15% 14%; }
   .kartu.b-enam { aspect-ratio:1.15; clip-path:var(--c-enam); padding:8% 19%; }
   .kartu.b-lima { aspect-ratio:1; clip-path:var(--c-lima); padding:24% 20% 9%; }
-  .kartu.b-segitiga { aspect-ratio:1; clip-path:var(--c-segitiga); padding:50% 24% 6%; justify-content:flex-end; }
+  .kartu.b-tumpul { aspect-ratio:1.7; border-radius:22px; padding:7% 8%; }
   .kartu.lain .kepala { display:contents; }
   .kartu.lain .kepala > div:first-child { order:1; }
   .kartu.lain .nama { font-size:15px; }
   .kartu.lain .waktu { font-size:12px; margin-top:0; white-space:nowrap; }
   .kartu.lain .teks { order:2; margin:6px 0 8px; text-align:center; font-size:14px; }
   .kartu.lain .aksi { order:3; justify-content:center; }
-  .kartu.b-segitiga .nama { font-size:13px; }
-  .kartu.b-segitiga .teks { font-size:13px; margin:4px 0 6px; }
   .kartu.lain .btn.garis { font-size:12px; padding:3px 8px; }
 
   /* tombol */
@@ -98,7 +96,6 @@
   .tulis input:focus, .tulis textarea:focus { outline:none; background:rgba(255,255,255,.25); }
   .kartu.lain.tulis input.in-nama { font-size:15px; }
   .kartu.lain.tulis textarea { font-size:14px; }
-  .kartu.b-segitiga.tulis input.in-nama, .kartu.b-segitiga.tulis textarea { font-size:13px; }
   .kontrol { display:flex; flex-direction:column; gap:8px; margin-top:12px; font-size:14px;
              background:rgba(255,255,255,.85); padding:10px 12px; }
   .baris { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; color:var(--abu); }
@@ -162,7 +159,7 @@ const BENTUK = {
   lingkaran:{ label: 'Lingkaran', maks: 120, baris: 4 },
   enam:     { label: 'Segi enam', maks: 120, baris: 4 },
   lima:     { label: 'Segi lima', maks: 100, baris: 3 },
-  segitiga: { label: 'Segitiga',  maks: 60,  baris: 3 }
+  tumpul:   { label: 'Persegi panjang', maks: 120, baris: 4 }
 };
 function cekBentuk(b) { b = String(b || '').toLowerCase(); return Object.prototype.hasOwnProperty.call(BENTUK, b) ? b : 'persegi'; }
 const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -445,11 +442,9 @@ function kartuBalasan(p, i, n, prev) {
   if (i > 0) {
     const prevLain = prev.bentuk !== 'persegi';
     const prevTutup = !prevLain && !(terbuka[prev.id] ?? false);   // balasan yang bukan terakhir tertutup bawaannya
-    // isi segitiga ada di bagian bawah, jadi kartu berikutnya tidak boleh menutupinya
-    const aman = prev.bentuk === 'segitiga' ? 4 : -14;
-    if (lain) mt = prev.bentuk === 'segitiga' ? -8 : (prev.bentuk === 'persegi' ? -40 : -64);   // bentuk lain naik lebih tinggi, menutupi sudut kosong kartu di bawahnya
+    if (lain) mt = prev.bentuk === 'persegi' ? -40 : -64;   // bentuk lain naik lebih tinggi, menutupi sudut kosong kartu di bawahnya
     else if (prevTutup) mt = -40;
-    else mt = prevLain ? aman : 6;
+    else mt = prevLain ? -14 : 6;
   }
   el.style.marginTop = mt + 'px';
   // tiap balasan memakai warna pilihan pengirimnya; makin ke depan makin terang agar tumpukan terlihat berlapis
