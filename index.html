@@ -436,16 +436,20 @@ function kartuBalasan(p, i, n, prev) {
     ? h('div', { class: 'balas kartu lain b-' + p.bentuk }, isiKartu(p))
     : h('div', { class: 'balas' + (buka ? '' : ' tutup'), title: buka ? 'Klik untuk menutup' : 'Klik untuk membuka',
                  onclick: () => { terbuka[p.id] = !buka; render(); } }, isiKartu(p));
-  el.style.marginLeft = (i * langkah).toFixed(1) + 'px';
-  el.style.width = lain ? `min(280px, calc(100% - ${geser}px))` : `calc(100% - ${geser}px)`;
+  // bentuk selain persegi punya sudut kosong, jadi digeser lebih ke samping agar tumpukan terlihat jelas
+  const ekstra = lain ? 22 : 0;
+  el.style.marginLeft = (i * langkah + (i > 0 ? ekstra : 0)).toFixed(1) + 'px';
+  el.style.width = lain ? `min(280px, calc(100% - ${geser}px - ${ekstra}px))` : `calc(100% - ${geser}px)`;
   // jarak antar balasan: kartu depan menutupi sebagian kartu belakang
   let mt = 0;
   if (i > 0) {
     const prevLain = prev.bentuk !== 'persegi';
     const prevTutup = !prevLain && !(terbuka[prev.id] ?? false);   // balasan yang bukan terakhir tertutup bawaannya
-    if (lain) mt = -30;
+    // isi segitiga ada di bagian bawah, jadi kartu berikutnya tidak boleh menutupinya
+    const aman = prev.bentuk === 'segitiga' ? 4 : -14;
+    if (lain) mt = prev.bentuk === 'segitiga' ? -8 : (prev.bentuk === 'persegi' ? -40 : -64);   // bentuk lain naik lebih tinggi, menutupi sudut kosong kartu di bawahnya
     else if (prevTutup) mt = -40;
-    else mt = prevLain ? -12 : 6;
+    else mt = prevLain ? aman : 6;
   }
   el.style.marginTop = mt + 'px';
   // tiap balasan memakai warna pilihan pengirimnya; makin ke depan makin terang agar tumpukan terlihat berlapis
@@ -504,7 +508,7 @@ function teksTimer(ms) {
 }
 function tickTimer() {
   const el = document.getElementById('timer');
-  if (el) el.textContent = 'Sisa waktu minggu ini: ' + teksTimer(sisaPekan(Date.now()));
+  if (el) el.textContent = 'Papan ini di-reset seminggu sekali. Sisa waktu tempel catatan minggu ini: ' + teksTimer(sisaPekan(Date.now()));
 }
 
 /* ================== MULAI ================== */
