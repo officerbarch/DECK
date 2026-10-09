@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DECK</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root { --h:#000; --p:#fff; --abu:#777; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+           max-width:1200px; margin:0 auto; padding:22px 24px 10px; }
+  h1 { margin:0; font-size:40px; letter-spacing:1px; }
+  #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
+
+  .dek { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:30px 26px;
+         align-items:start; max-width:1200px; margin:0 auto; padding:14px 24px 80px; }
+
+  /* kartu */
+  .kartu { background:var(--p); border:2px solid var(--h); padding:16px 18px; box-shadow:4px 4px 0 var(--h); }
+  .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
+  .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .nama { font-weight:700; font-size:16px; overflow-wrap:anywhere; }
+  .waktu { color:var(--abu); font-size:13px; margin-top:2px; }
+  .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; }
+  .aksi { display:flex; gap:6px; flex-shrink:0; }
+  .bawah { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--abu); }
+
+  /* tombol */
+  .btn { font:inherit; font-size:12px; background:var(--h); color:var(--p); border:2px solid var(--h);
+         border-radius:0; padding:6px 14px; cursor:pointer; }
+  .btn:hover:not(:disabled) { background:var(--p); color:var(--h); }
+  .btn:disabled { opacity:.45; cursor:wait; }
+  .btn.garis { background:var(--p); color:var(--h); padding:4px 10px; }
+  .btn.garis:hover:not(:disabled) { background:var(--h); color:var(--p); }
+  .btn.garis.aktif { background:var(--h); color:var(--p); }
+
+  /* tumpukan balasan */
+  .tumpukan { margin:12px 0 0 16px; }
+  .balas { border:2px solid var(--h); background:var(--p); margin-top:-2px; padding:12px 16px;
+           box-shadow:4px 4px 0 var(--h); position:relative; cursor:pointer; }
+  .balas:first-child { margin-top:0; }
+  .balas.tutup { height:74px; overflow:hidden; }
+  .balas .teks { margin:8px 0 0; font-size:14px; }
+
+  /* formulir */
+  form.isi { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  input[type=text], textarea { font:inherit; font-size:14px; border:2px solid var(--h); border-radius:0;
+                               padding:8px 10px; width:100%; background:var(--p); color:var(--h); }
+  textarea { min-height:84px; resize:vertical; }
+  .baris { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; color:var(--abu); }
+  .judul { font-weight:700; margin-bottom:2px; }
+
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--h); color:var(--p);
+           padding:10px 18px; font-size:14px; display:none; max-width:90vw; z-index:10; }
+  #banner { max-width:1200px; margin:0 auto; padding:0 24px; font-size:14px; }
+  #banner div { border:2px dashed var(--h); padding:10px 14px; margin:8px 0; }
+  .kosong { color:var(--abu); padding:30px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DECK</h1>
+  <div id="login"></div>
+</header>
+<div id="banner"></div>
+<main class="dek" id="dek"></main>
+<div id="toast"></div>
+
+<script>
+/* ================== KONFIGURASI (ISI 3 BARIS INI) ================== */
+const CONFIG = {
+  SCRIPT_URL: 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT',          // berakhiran /exec
+  CSV_URL: 'GANTI_DENGAN_URL_CSV_SHEET_POSTS',                 // dari File > Bagikan > Publikasikan ke web (CSV)
+  GOOGLE_CLIENT_ID: 'GANTI_DENGAN_CLIENT_ID.apps.googleusercontent.com',
+  REFRESH_MS: 30000,
+  MAKS_USERNAME: 20,
+  MAKS_TEKS: 500
+};
+/* Catatan: kosongkan CSV_URL ('') jika ingin membaca langsung lewat Apps Script (lebih cepat, tanpa jeda cache ~5 menit). */
+
+/* ================== STATE ================== */
+const siap = v => v && !String(v).startsWith('GANTI');
+let dataServer = [];          // dari CSV / API
+let lokal = [];               // postingan yang baru saya kirim (menunggu CSV terbarui)
+let override = {};            // jumlah up/down terbaru dari server setelah saya vote
+let sayaVote = {};            // { idPost: 1 | -1 }
+let terbuka = {};             // status buka/tutup balasan { id: true/false }
+let balasTerbuka = null;      // id post yang formulir balasnya sedang terbuka
+let draft = {};               // isi formulir yang belum terkirim
+let token = sessionStorage.getItem('tok') || '';
+
+/* ================== UTIL ================== */
+const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function fmt(w) {
+  const d = new Date(w); if (isNaN(d)) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${p(d.getHours())}.${p(d.getMinutes())} – ${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`;
+}
+function acak(id, n) { let x = 0; for (const c of id + n) x = (x * 31 + c.charCodeAt(0)) >>> 0; return (x % 1000) / 1000; }
+function h(tag, a = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(a)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  kids.flat().forEach(c => { if (c != null && c !== false) e.append(c); });
+  return e;
+}
+let tToast;
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(tToast); tToast = setTimeout(() => t.style.display = 'none', 3500);
+}
+const getUser = () => localStorage.getItem('deck_user') || '';
+const setUser = v => localStorage.setItem('deck_user', v);
+
+/* ================== CSV ================== */
+function parseCSV(t) {
+  const rows = []; let r = [], c = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"') { if (t[i + 1] === '"') { c += '"'; i++; } else q = false; } else c += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { r.push(c); c = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; r.push(c); c = ''; rows.push(r); r = []; }
+    else c += ch;
+  }
+  if (c !== '' || r.length) { r.push(c); rows.push(r); }
+  return rows;
+}
+function dariCSV(teks) {
+  const rows = parseCSV(teks); if (rows.length < 2) return [];
+  const kop = rows[0].map(s => s.trim().toLowerCase());
+  return rows.slice(1).map(r => { const o = {}; kop.forEach((k, i) => o[k] = r[i] ?? ''); return o; });
+}
+function normal(o) {
+  return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
+           username: String(o.username || ''), teks: String(o.teks || ''),
+           up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
+}
+
+/* ================== MUAT DATA ================== */
+async function muat(otomatis) {
+  if (otomatis && (document.hidden || sedangMengetik())) return;
+  try {
+    let daftar = [];
+    if (siap(CONFIG.CSV_URL)) {
+      const u = CONFIG.CSV_URL + (CONFIG.CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+      const r = await fetch(u, { cache: 'no-store' });
+      daftar = dariCSV(await r.text());
+    } else if (siap(CONFIG.SCRIPT_URL)) {
+      const r = await fetch(CONFIG.SCRIPT_URL + '?aksi=daftar');
+      daftar = (await r.json()).posts || [];
+    }
+    dataServer = daftar.map(normal).filter(p => p.id && p.teks);
+    render();
+  } catch (e) { if (!otomatis) toast('Gagal memuat data.'); }
+}
+function sedangMengetik() {
+  const a = document.activeElement;
+  return a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT') && document.getElementById('dek').contains(a);
+}
+function semua() {
+  const m = new Map();
+  dataServer.forEach(p => m.set(p.id, { ...p }));
+  lokal.forEach(p => { if (!m.has(p.id)) m.set(p.id, { ...p }); });
+  const now = Date.now();
+  for (const [id, o] of Object.entries(override)) {
+    const p = m.get(id); if (p && now - o.t < 360000) { p.up = o.up; p.down = o.down; }
+  }
+  return [...m.values()];
+}
+const skor = p => p.up - p.down;
+const urut = (a, b) => skor(b) - skor(a) || new Date(b.waktu) - new Date(a.waktu);
+
+/* ================== PANGGIL APPS SCRIPT ================== */
+const PESAN = {
+  LOGIN: 'Sesi login habis. Silakan masuk lagi dengan Google.',
+  DILARANG: 'Akun Google Anda tidak ada dalam daftar yang boleh posting.'
+};
+async function panggil(isi) {
+  if (!siap(CONFIG.SCRIPT_URL)) throw new Error('SCRIPT_URL belum diisi.');
+  const r = await fetch(CONFIG.SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // tanpa preflight CORS
+    body: JSON.stringify({ ...isi, token })
+  });
+  const j = await r.json();
+  if (!j.ok) {
+    if (j.error === 'LOGIN') keluar(true);
+    throw new Error(PESAN[j.error] || j.error || 'Terjadi kesalahan.');
+  }
+  return j;
+}
+
+/* ================== LOGIN GOOGLE ================== */
+function tokenHidup() {
+  if (!token) return false;
+  try {
+    const p = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return p.exp * 1000 > Date.now() + 30000;
+  } catch (e) { return false; }
+}
+function initGoogle() {
+  if (!siap(CONFIG.GOOGLE_CLIENT_ID)) return renderLogin();
+  if (!window.google || !google.accounts) return setTimeout(initGoogle, 300);
+  google.accounts.id.initialize({
+    client_id: CONFIG.GOOGLE_CLIENT_ID,
+    callback: async r => { token = r.credential; sessionStorage.setItem('tok', token); await sapa(); }
+  });
+  renderLogin();
+}
+function renderLogin() {
+  const el = document.getElementById('login'); el.innerHTML = '';
+  if (tokenHidup()) {
+    el.append(h('span', {}, 'Masuk ✓ (identitas Anda tidak ditampilkan)'),
+              h('button', { class: 'btn garis', onclick: () => keluar() }, 'Keluar'));
+  } else if (siap(CONFIG.GOOGLE_CLIENT_ID) && window.google && google.accounts) {
+    const slot = h('div'); el.append(slot);
+    google.accounts.id.renderButton(slot, { theme: 'outline', size: 'medium', text: 'signin_with' });
+  } else {
+    el.append(h('span', {}, 'Login belum dikonfigurasi'));
+  }
+}
+async function sapa() {
+  try { const j = await panggil({ aksi: 'saya' }); sayaVote = j.votes || {}; toast('Berhasil masuk.'); }
+  catch (e) { toast(e.message); keluar(true); }
+  renderLogin(); render();
+}
+function keluar(diam) {
+  token = ''; sessionStorage.removeItem('tok'); sayaVote = {};
+  renderLogin(); if (!diam) toast('Anda sudah keluar.'); render();
+}
+function butuhLogin() {
+  if (tokenHidup()) return true;
+  token = ''; renderLogin(); toast('Masuk dengan akun Google dulu.'); return false;
+}
+
+/* ================== AKSI ================== */
+async function vote(id, n, btn) {
+  if (!butuhLogin()) return;
+  btn.disabled = true;
+  try {
+    const j = await panggil({ aksi: 'vote', id, nilai: n });
+    sayaVote[id] = j.saya; override[id] = { up: j.up, down: j.down, t: Date.now() };
+  } catch (e) { toast(e.message); }
+  render();
+}
+async function kirim(kunci, parent, btn) {
+  if (!butuhLogin()) return;
+  const d = draft[kunci] || { u: getUser(), t: '' };
+  const u = d.u.trim(), t = d.t.trim();
+  if (!u) return toast('Isi username dulu.');
+  if (!t) return toast('Tulis sesuatu dulu.');
+  btn.disabled = true;
+  try {
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '' });
+    lokal.push(normal(j.post)); setUser(u); delete draft[kunci];
+    if (parent) balasTerbuka = null;
+    toast('Terkirim ✓');
+  } catch (e) { toast(e.message); }
+  render();
+}
+
+/* ================== RENDER ================== */
+function formulir(kunci, parent, label) {
+  const d = draft[kunci] = draft[kunci] || { u: getUser(), t: '' };
+  const hitung = h('span', {}, `${d.t.length}/${CONFIG.MAKS_TEKS}`);
+  const u = h('input', { type: 'text', placeholder: 'Username (bebas, boleh anonim)', maxlength: CONFIG.MAKS_USERNAME, value: d.u,
+                         oninput: e => { d.u = e.target.value; } });
+  const t = h('textarea', { placeholder: label, maxlength: CONFIG.MAKS_TEKS,
+                            oninput: e => { d.t = e.target.value; hitung.textContent = `${d.t.length}/${CONFIG.MAKS_TEKS}`; } });
+  t.value = d.t;
+  const kirimBtn = h('button', { class: 'btn', type: 'submit' }, 'Kirim');
+  const f = h('form', { class: 'isi', onsubmit: e => { e.preventDefault(); kirim(kunci, parent, kirimBtn); } },
+    u, t, h('div', { class: 'baris' }, hitung, kirimBtn));
+  return f;
+}
+function tombolVote(p) {
+  const s = sayaVote[p.id] || 0;
+  const klik = n => e => { e.stopPropagation(); vote(p.id, n, e.currentTarget); };
+  return h('div', { class: 'aksi' },
+    h('button', { class: 'btn garis' + (s === 1 ? ' aktif' : ''), onclick: klik(1) }, 'Up ' + p.up),
+    h('button', { class: 'btn garis' + (s === -1 ? ' aktif' : ''), onclick: klik(-1) }, 'Down ' + p.down));
+}
+function kartuBalasan(p, terakhir) {
+  const buka = terbuka[p.id] ?? terakhir;
+  return h('div', { class: 'balas' + (buka ? '' : ' tutup'), title: buka ? 'Klik untuk menutup' : 'Klik untuk membuka',
+                    onclick: () => { terbuka[p.id] = !buka; render(); } },
+    h('div', { class: 'kepala' },
+      h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
+      tombolVote(p)),
+    h('p', { class: 'teks' }, p.teks));
+}
+function kartuUtama(p, balasan) {
+  const item = h('div', { class: 'item' });
+  item.style.setProperty('--dx', ((acak(p.id, 'x') - .5) * 20).toFixed(1) + 'px');
+  item.style.setProperty('--rot', ((acak(p.id, 'r') - .5) * 2.4).toFixed(2) + 'deg');
+  item.style.setProperty('--dy', (acak(p.id, 'y') * 16).toFixed(1) + 'px');
+  const kartu = h('article', { class: 'kartu' },
+    h('div', { class: 'kepala' },
+      h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
+      tombolVote(p)),
+    h('p', { class: 'teks' }, p.teks),
+    h('div', { class: 'bawah' },
+      h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
+      h('span', {}, balasan.length ? balasan.length + ' balasan' : '')),
+    balasTerbuka === p.id ? formulir(p.id, p.id, 'Tulis balasan…') : null);
+  item.append(kartu);
+  if (balasan.length) {
+    item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i === balasan.length - 1))));
+  }
+  return item;
+}
+function render() {
+  const dek = document.getElementById('dek'); dek.innerHTML = '';
+  // kartu penulis baru
+  dek.append(h('div', { class: 'item' }, h('div', { class: 'kartu' },
+    h('div', { class: 'judul' }, 'Postingan baru'),
+    formulir('baru', '', 'Apa yang ingin Anda bagikan?'))));
+  const all = semua();
+  const utama = all.filter(p => !p.parent).sort(urut);
+  const anak = {};
+  all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
+  utama.forEach(p => dek.append(kartuUtama(p, (anak[p.id] || []).sort(urut))));
+  if (!utama.length) dek.append(h('div', { class: 'kosong' }, 'Belum ada postingan. Jadilah yang pertama!'));
+}
+
+/* ================== MULAI ================== */
+(function mulai() {
+  const b = document.getElementById('banner');
+  if (!siap(CONFIG.SCRIPT_URL) || !siap(CONFIG.GOOGLE_CLIENT_ID) || (!siap(CONFIG.CSV_URL) && !siap(CONFIG.SCRIPT_URL))) {
+    b.append(h('div', {}, 'Konfigurasi belum lengkap: isi SCRIPT_URL, CSV_URL, dan GOOGLE_CLIENT_ID di bagian CONFIG pada index.html.'));
+  }
+  if (!tokenHidup()) { token = ''; sessionStorage.removeItem('tok'); }
+  render(); muat();
+  setInterval(() => muat(true), CONFIG.REFRESH_MS);
+  initGoogle();
+  if (tokenHidup() && siap(CONFIG.SCRIPT_URL)) sapa();
+})();
+</script>
+</body>
+</html>
