@@ -43,7 +43,10 @@
   .balas { border:none; background:var(--kuning); margin-top:6px; padding:12px 16px;
            position:relative; cursor:pointer; }
   .balas:first-child { margin-top:0; }
-  .balas.tutup { height:74px; overflow:hidden; }
+  .balas.tutup { height:114px; overflow:hidden; }
+  .balas.tutup .teks { visibility:hidden; }
+  .balas.tutup + .balas { margin-top:-40px; }   /* kartu depan menutupi bagian bawah kartu belakang */
+  .balas.tutup:last-child { height:74px; }
   .balas .teks { margin:8px 0 0; font-size:14px; }
 
   /* formulir */
@@ -294,14 +297,21 @@ function tombolVote(p) {
     h('button', { class: 'btn garis' + (s === 1 ? ' aktif' : ''), onclick: klik(1) }, 'Up ' + p.up),
     h('button', { class: 'btn garis' + (s === -1 ? ' aktif' : ''), onclick: klik(-1) }, 'Down ' + p.down));
 }
-function kartuBalasan(p, terakhir) {
+function kartuBalasan(p, i, n) {
+  const terakhir = i === n - 1;
   const buka = terbuka[p.id] ?? terakhir;
-  return h('div', { class: 'balas' + (buka ? '' : ' tutup'), title: buka ? 'Klik untuk menutup' : 'Klik untuk membuka',
-                    onclick: () => { terbuka[p.id] = !buka; render(); } },
+  const langkah = n > 1 ? Math.min(14, 56 / (n - 1)) : 0;   // geser kanan per tingkat
+  const el = h('div', { class: 'balas' + (buka ? '' : ' tutup'), title: buka ? 'Klik untuk menutup' : 'Klik untuk membuka',
+                        onclick: () => { terbuka[p.id] = !buka; render(); } },
     h('div', { class: 'kepala' },
       h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
       tombolVote(p)),
     h('p', { class: 'teks' }, p.teks));
+  el.style.marginLeft = (i * langkah).toFixed(1) + 'px';
+  el.style.width = `calc(100% - ${((n - 1) * langkah).toFixed(1)}px)`;
+  // tanpa garis tepi, kartu belakang dibuat sedikit lebih gelap agar tingkatnya terlihat
+  if (!buka) el.style.background = `hsl(54, 100%, ${Math.max(55, 73 - (n - 1 - i) * 4)}%)`;
+  return el;
 }
 function kartuUtama(p, balasan) {
   const item = h('div', { class: 'item' });
@@ -319,7 +329,7 @@ function kartuUtama(p, balasan) {
     balasTerbuka === p.id ? formulir(p.id, p.id, 'Tulis balasan…') : null);
   item.append(kartu);
   if (balasan.length) {
-    item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i === balasan.length - 1))));
+    item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, balasan.length))));
   }
   return item;
 }
