@@ -477,32 +477,22 @@ function kartuUtama(p, balasan) {
   return item;
 }
 
-/* ---------- Latar titik: titik menjauh dari kartu yang tertempel ---------- */
-const TITIK = { jarak: 22, jari: 1.1, warna: '#b5b5b5', dorong: 30, jangkauan: 1.7, kecepatan: .1 };
-const titik = { kanvas: null, ctx: null, rect: [], geser: new Map(), jalan: false, kurang: false };
+/* ---------- Latar titik: titik menjauh dari kursor mouse ---------- */
+const TITIK = { jarak: 22, jari: 1.2, warna: '#9a9a9a', dorong: 38, radius: 130, kecepatan: .14 };
+const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false };
 function titikUkuran() {
   const k = titik.kanvas, d = window.devicePixelRatio || 1;
   k.width = Math.round(innerWidth * d); k.height = Math.round(innerHeight * d);
   titik.ctx = k.getContext('2d'); titik.ctx.setTransform(d, 0, 0, d, 0, 0);
 }
-function titikHitungRect() {
-  titik.rect = [...document.querySelectorAll('#dek .kartu, #dek .balas')].map(el => {
-    const r = el.getBoundingClientRect();
-    return { cx: r.left + scrollX + r.width / 2, cy: r.top + scrollY + r.height / 2, hw: r.width / 2 + 6, hh: r.height / 2 + 6 };
-  });
-}
-// target pergeseran satu titik (koordinat halaman) akibat semua kartu
+// target pergeseran satu titik: didorong menjauhi kursor (koordinat layar)
 function titikTarget(x, y) {
-  let tx = 0, ty = 0;
-  for (const r of titik.rect) {
-    const dx = x - r.cx, dy = y - r.cy;
-    const q = Math.max(Math.abs(dx) / r.hw, Math.abs(dy) / r.hh);
-    if (q >= TITIK.jangkauan) continue;
-    const d = Math.hypot(dx, dy) || 1;
-    const kuat = Math.pow((TITIK.jangkauan - q) / TITIK.jangkauan, 1.5) * TITIK.dorong;
-    tx += dx / d * kuat; ty += dy / d * kuat;
-  }
-  return [tx, ty];
+  const dx = x - titik.mx, dy = y - titik.my, R = TITIK.radius;
+  const d2 = dx * dx + dy * dy;
+  if (d2 >= R * R) return [0, 0];
+  const d = Math.sqrt(d2) || 1;
+  const kuat = Math.pow(1 - d / R, 1.6) * TITIK.dorong;
+  return [dx / d * kuat, dy / d * kuat];
 }
 function titikGambar() {
   const c = titik.ctx, J = TITIK.jarak;
@@ -514,19 +504,21 @@ function titikGambar() {
   c.beginPath();
   for (let k = k0; k <= k1; k++) {
     for (let i = 0; i <= i1; i++) {
-      const x = i * J + J / 2, y = k * J + J / 2;
+      const x = i * J + J / 2, y = k * J + J / 2 - scrollY;   // y = posisi di layar
       const [tx, ty] = titikTarget(x, y);
-      const kunci = k * 4096 + i;
+      const kunci = (k + 1000) * 4096 + i;
       let g = titik.geser.get(kunci);
-      if (!g) { if (!tx && !ty) { c.moveTo(x + TITIK.jari, y - scrollY); c.arc(x, y - scrollY, TITIK.jari, 0, 6.2832); continue; } g = { x: 0, y: 0 }; titik.geser.set(kunci, g); }
+      if (!g) {
+        if (!tx && !ty) { c.moveTo(x + TITIK.jari, y); c.arc(x, y, TITIK.jari, 0, 6.2832); continue; }
+        g = { x: 0, y: 0 }; titik.geser.set(kunci, g);
+      }
       if (titik.kurang) { g.x = tx; g.y = ty; }
       else {
         g.x += (tx - g.x) * TITIK.kecepatan; g.y += (ty - g.y) * TITIK.kecepatan;
         if (Math.abs(tx - g.x) > .05 || Math.abs(ty - g.y) > .05) bergerak = true; else { g.x = tx; g.y = ty; }
       }
       if (!tx && !ty && !g.x && !g.y) titik.geser.delete(kunci);
-      const px = x + g.x, py = y + g.y - scrollY;
-      c.moveTo(px + TITIK.jari, py); c.arc(px, py, TITIK.jari, 0, 6.2832);
+      c.moveTo(x + g.x + TITIK.jari, y + g.y); c.arc(x + g.x, y + g.y, TITIK.jari, 0, 6.2832);
     }
   }
   c.fill();
@@ -534,15 +526,19 @@ function titikGambar() {
   if (bergerak) requestAnimationFrame(titikGambar);
 }
 function titikMinta() { if (!titik.jalan) { titik.jalan = true; requestAnimationFrame(titikGambar); } }
-function titikPerbarui() { requestAnimationFrame(() => { titikHitungRect(); titikMinta(); }); }
 function titikMulai() {
   titik.kanvas = document.getElementById('titik');
   titik.kurang = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  titikUkuran(); titikHitungRect(); titikMinta();
-  addEventListener('resize', () => { titikUkuran(); titikHitungRect(); titikMinta(); });
+  titikUkuran(); titikMinta();
+  const arah = e => { titik.mx = e.clientX; titik.my = e.clientY; titikMinta(); };
+  const pergi = () => { titik.mx = titik.my = -9999; titikMinta(); };
+  addEventListener('pointermove', arah, { passive: true });
+  addEventListener('pointerdown', arah, { passive: true });
+  addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') pergi(); });
+  document.documentElement.addEventListener('mouseleave', pergi);
+  addEventListener('blur', pergi);
+  addEventListener('resize', () => { titikUkuran(); titikMinta(); });
   addEventListener('scroll', titikMinta, { passive: true });
-  if (window.ResizeObserver) new ResizeObserver(titikPerbarui).observe(document.getElementById('dek'));
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(titikPerbarui);
 }
 function render() {
   const dek = document.getElementById('dek'); dek.innerHTML = '';
@@ -552,7 +548,6 @@ function render() {
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
   utama.forEach(p => dek.append(kartuUtama(p, (anak[p.id] || []).sort(urut))));
-  if (titik.kanvas) titikPerbarui();
 }
 
 /* ================== TIMER MINGGUAN (Senin 00.00 - Minggu 23.59 WIB) ================== */
