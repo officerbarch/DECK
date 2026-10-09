@@ -6,7 +6,7 @@
 <title>deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root { --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176; }
@@ -25,17 +25,17 @@
 
   /* kartu */
   .kartu { background:var(--kuning); border:none; padding:16px 18px; }
-  .kartu, .balas { font-family:'Gloria Hallelujah','Segoe Print','Bradley Hand',cursive; }
+  .kartu, .balas { font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-  .nama { font-weight:400; font-size:16px; overflow-wrap:anywhere; }
-  .waktu { color:var(--abu); font-size:13px; margin-top:2px; }
-  .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; }
+  .nama { font-weight:700; font-size:17px; overflow-wrap:anywhere; }
+  .waktu { color:var(--abu); font-size:14px; margin-top:2px; }
+  .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
   .aksi { display:flex; gap:6px; flex-shrink:0; }
   .bawah { display:flex; align-items:center; gap:12px; font-size:14px; color:var(--abu); }
 
   /* tombol */
-  .btn { font:inherit; font-size:13px; background:var(--h); color:var(--p); border:2px solid transparent;
+  .btn { font:inherit; font-size:14px; background:var(--h); color:var(--p); border:2px solid transparent;
          border-radius:0; padding:6px 14px; cursor:pointer; }
   .btn:hover:not(:disabled) { background:var(--p); color:var(--h); }
   .btn:disabled { opacity:.45; cursor:wait; }
@@ -52,11 +52,11 @@
   .balas.tutup .teks { visibility:hidden; }
   .balas.tutup + .balas { margin-top:-40px; }   /* kartu depan menutupi bagian bawah kartu belakang */
   .balas.tutup:last-child { height:74px; }
-  .balas .teks { margin:8px 0 0; font-size:14px; }
+  .balas .teks { margin:8px 0 0; font-size:15px; }
 
   /* formulir */
   form.isi { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-  input[type=text], textarea { font:inherit; font-size:15px; border:none; border-radius:0;
+  input[type=text], textarea { font:inherit; font-size:16px; border:none; border-radius:0;
                                padding:8px 10px; width:100%; background:var(--p); color:var(--h); }
   input[type=text]:focus, textarea:focus { outline:1px solid var(--h); }
   textarea { min-height:84px; resize:vertical; }
@@ -328,6 +328,11 @@ function kartuBalasan(p, i, n) {
   el.style.width = `calc(100% - ${((n - 1) * langkah).toFixed(1)}px)`;
   // gradasi monokrom satu deck: kartu induk paling gelap (belakang), balasan makin ke depan makin terang
   el.style.background = `hsl(54, 100%, ${(68 + (i + 1) * Math.min(5, 20 / n)).toFixed(1)}%)`;
+  // tempelan acak (tetap sama untuk balasan yang sama): sedikit miring dan bergeser
+  const rot = (acak(p.id, 'rr') - .5) * 5;     // sekitar ±2.5 derajat
+  const dx = (acak(p.id, 'rx') - .5) * 10;     // sekitar ±5px
+  const dy = (acak(p.id, 'ry') - .5) * 6;      // sekitar ±3px
+  el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`;
   return el;
 }
 function kartuUtama(p, balasan) {
