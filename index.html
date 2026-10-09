@@ -9,7 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-  :root { --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176; }
+  :root {
+    --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176;
+    --c-enam: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+    --c-lima: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+    --c-segitiga: polygon(50% 0, 100% 100%, 0 100%);
+  }
   * { box-sizing: border-box; }
   body { margin:0; background-color:var(--p); background-image:radial-gradient(#b5b5b5 1px, transparent 1.2px);
          background-size:22px 22px; color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
@@ -18,7 +23,20 @@
   h1 { margin:0; font-size:clamp(14px, 3.6vw, 26px); font-weight:400; white-space:nowrap; }
   h1 b { font-weight:700; }
   footer { max-width:1200px; margin:0 auto; padding:0 24px 16px; text-align:center; font-size:11px; color:var(--h); }
+  #timer { font-size:14px; margin-bottom:6px; }
   #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
+
+  /* deretan tombol bentuk */
+  #alat { max-width:1200px; margin:0 auto; padding:6px 24px 4px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
+  .petunjuk { color:var(--abu); }
+  .ikon { width:34px; height:34px; background:#9a9a9a; border:none; padding:0; cursor:pointer; flex-shrink:0; }
+  .ikon.kecil { width:26px; height:26px; }
+  .ikon:hover, .ikon.pilih { background:var(--h); }
+  .ikon.pilih { transform:scale(1.12); }
+  .ikon.b-lingkaran { border-radius:50%; }
+  .ikon.b-enam { clip-path:var(--c-enam); }
+  .ikon.b-lima { clip-path:var(--c-lima); }
+  .ikon.b-segitiga { clip-path:var(--c-segitiga); }
 
   .dek { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:30px 26px;
          align-items:start; max-width:1200px; margin:0 auto; padding:14px 24px 40px; }
@@ -33,9 +51,27 @@
   .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
   .aksi { display:flex; gap:6px; flex-shrink:0; }
   .bawah { display:flex; align-items:center; gap:12px; font-size:14px; color:var(--abu); }
+  .item > .bawah { justify-content:center; margin-top:10px; }
+
+  /* bentuk selain persegi */
+  .kartu.lain { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+                width:100%; max-width:330px; margin-left:auto; margin-right:auto; }
+  .kartu.b-lingkaran { aspect-ratio:1; border-radius:50%; padding:15% 14%; }
+  .kartu.b-enam { aspect-ratio:1.15; clip-path:var(--c-enam); padding:8% 19%; }
+  .kartu.b-lima { aspect-ratio:1; clip-path:var(--c-lima); padding:24% 20% 9%; }
+  .kartu.b-segitiga { aspect-ratio:1; clip-path:var(--c-segitiga); padding:50% 24% 6%; justify-content:flex-end; }
+  .kartu.lain .kepala { display:contents; }
+  .kartu.lain .kepala > div:first-child { order:1; }
+  .kartu.lain .nama { font-size:15px; }
+  .kartu.lain .waktu { font-size:12px; margin-top:0; white-space:nowrap; }
+  .kartu.lain .teks { order:2; margin:6px 0 8px; text-align:center; font-size:14px; }
+  .kartu.lain .aksi { order:3; justify-content:center; }
+  .kartu.b-segitiga .nama { font-size:13px; }
+  .kartu.b-segitiga .teks { font-size:13px; margin:4px 0 6px; }
+  .kartu.lain .btn.garis { font-size:12px; padding:3px 8px; }
 
   /* tombol */
-  .btn { font:inherit; font-size:14px; background:var(--h); color:var(--p); border:2px solid transparent;
+  .btn { font:inherit; font-size:14px; white-space:nowrap; background:var(--h); color:var(--p); border:2px solid transparent;
          border-radius:0; padding:6px 14px; cursor:pointer; }
   .btn:hover:not(:disabled) { background:var(--p); color:var(--h); }
   .btn:disabled { opacity:.45; cursor:wait; }
@@ -47,22 +83,27 @@
   .tumpukan { margin:0; }
   .balas { border:none; background:var(--kuning); margin-top:6px; padding:12px 16px;
            position:relative; cursor:pointer; }
-  .balas:first-child { margin-top:0; }
+  .balas.lain { cursor:default; }
   .balas.tutup { height:114px; overflow:hidden; }
   .balas.tutup .teks { visibility:hidden; }
-  .balas.tutup + .balas { margin-top:-40px; }   /* kartu depan menutupi bagian bawah kartu belakang */
   .balas.tutup:last-child { height:74px; }
   .balas .teks { margin:8px 0 0; font-size:15px; }
 
-  /* formulir */
-  form.isi { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-  input[type=text], textarea { font:inherit; font-size:16px; border:none; border-radius:0;
-                               padding:8px 10px; width:100%; background:var(--p); color:var(--h); }
-  input[type=text]:focus, textarea:focus { outline:1px solid var(--h); }
-  textarea { min-height:84px; resize:vertical; }
+  /* kartu penulis (pratinjau langsung) */
+  .kompos { margin-bottom:6px; }
+  .tulis input.in-nama { background:transparent; border:none; border-bottom:1px dashed rgba(0,0,0,.35); font-weight:700;
+                         font-size:17px; padding:2px 4px; width:100%; text-align:inherit; }
+  .tulis textarea { background:transparent; border:none; resize:none; min-height:0; width:100%; padding:6px 4px;
+                    font-size:16px; line-height:1.35; text-align:inherit; }
+  .tulis input:focus, .tulis textarea:focus { outline:none; background:rgba(255,255,255,.25); }
+  .kartu.lain.tulis input.in-nama { font-size:15px; }
+  .kartu.lain.tulis textarea { font-size:14px; }
+  .kartu.b-segitiga.tulis input.in-nama, .kartu.b-segitiga.tulis textarea { font-size:13px; }
+  .kontrol { display:flex; flex-direction:column; gap:8px; margin-top:12px; font-size:14px;
+             background:rgba(255,255,255,.85); padding:10px 12px; }
   .baris { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; color:var(--abu); }
-  .judul { font-weight:700; margin-bottom:2px; }
-  .warna { display:flex; flex-wrap:wrap; align-items:center; gap:7px; font-size:14px; }
+  .tombol { display:flex; gap:8px; }
+  .warna, .bentuk-baris { display:flex; flex-wrap:wrap; align-items:center; gap:7px; font-size:14px; }
   .warna button { width:22px; height:22px; border:none; border-radius:50%; padding:0; cursor:pointer; }
   .warna button.pilih { outline:2px solid var(--h); outline-offset:2px; }
 
@@ -70,7 +111,6 @@
            padding:10px 18px; font-size:14px; display:none; max-width:90vw; z-index:10; }
   #banner { max-width:1200px; margin:0 auto; padding:0 24px; font-size:14px; }
   #banner div { border:2px dashed var(--h); padding:10px 14px; margin:8px 0; }
-  .kosong { color:var(--abu); padding:30px 0; }
 </style>
 </head>
 <body>
@@ -79,9 +119,13 @@
   <h1><b>deck</b> : Write it. Stack it. Rise to the top.</h1>
   <div id="login"></div>
 </header>
+<nav id="alat"></nav>
 <div id="banner"></div>
 <main class="dek" id="dek"></main>
-<footer>by Nurfahmi Muchlis - Arsitektur ITS | 2026</footer>
+<footer>
+  <div id="timer"></div>
+  by Nurfahmi Muchlis - Arsitektur ITS | 2026
+</footer>
 <div id="toast"></div>
 
 <script>
@@ -91,8 +135,7 @@ const CONFIG = {
   CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRxTerBhSyjU3ZjVIaujJybJuMe3g2kZFdxYXpvTj98SzKjZwZAaCo7Nw_KRIqMCGp3I-638KlHb6fz/pub?gid=278077816&single=true&output=csv',
   GOOGLE_CLIENT_ID: '430383809546-5h6giln88c0bvl9oqta45tiiurs1mlf8.apps.googleusercontent.com',
   REFRESH_MS: 30000,
-  MAKS_USERNAME: 20,
-  MAKS_TEKS: 500
+  MAKS_USERNAME: 20
 };
 /* Catatan: kosongkan CSV_URL ('') jika ingin membaca langsung lewat Apps Script (lebih cepat, tanpa jeda cache ~5 menit). */
 
@@ -102,9 +145,10 @@ let dataServer = [];          // dari CSV / API
 let lokal = [];               // postingan yang baru saya kirim (menunggu CSV terbarui)
 let override = {};            // jumlah up/down terbaru dari server setelah saya vote
 let sayaVote = {};            // { idPost: 1 | -1 }
-let terbuka = {};             // status buka/tutup balasan { id: true/false }
-let balasTerbuka = null;      // id post yang formulir balasnya sedang terbuka
-let draft = {};               // isi formulir yang belum terkirim
+let terbuka = {};             // status buka/tutup balasan persegi { id: true/false }
+let balasTerbuka = null;      // id post yang kartu balasnya sedang terbuka
+let komposBuka = false;       // kartu penulis baru baru tampil setelah memilih bentuk di atas
+let draft = {};               // isi kartu penulis yang belum terkirim
 let token = sessionStorage.getItem('tok') || '';
 
 /* ================== UTIL ================== */
@@ -112,6 +156,15 @@ const WARNA = ['#000000', '#1d4ed8', '#b91c1c', '#15803d', '#7e22ce', '#be185d']
 function cekWarna(w) { w = String(w || '').toLowerCase(); return WARNA.includes(w) ? w : WARNA[0]; }
 const KARTU = { kuning: '#FFF176', pink: '#F8BBD0', biru: '#B3E5FC', hijau: '#C8E6C9', oranye: '#FFCC80', ungu: '#D1C4E9' };  // nama harus sama dengan KARTU di Kode.gs
 function cekKartu(k) { k = String(k || '').toLowerCase(); return KARTU[k] ? k : 'kuning'; }
+// batas huruf per bentuk (angka harus sama dengan BENTUK di Kode.gs)
+const BENTUK = {
+  persegi:  { label: 'Persegi',   maks: 200, baris: 4 },
+  lingkaran:{ label: 'Lingkaran', maks: 120, baris: 4 },
+  enam:     { label: 'Segi enam', maks: 120, baris: 4 },
+  lima:     { label: 'Segi lima', maks: 100, baris: 3 },
+  segitiga: { label: 'Segitiga',  maks: 60,  baris: 3 }
+};
+function cekBentuk(b) { b = String(b || '').toLowerCase(); return Object.prototype.hasOwnProperty.call(BENTUK, b) ? b : 'persegi'; }
 const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 function fmt(w) {
   const d = new Date(w); if (isNaN(d)) return '';
@@ -138,6 +191,14 @@ const getUser = () => localStorage.getItem('deck_user') || '';
 const setUser = v => localStorage.setItem('deck_user', v);
 const getWarna = () => cekWarna(localStorage.getItem('deck_warna'));
 const getKartu = () => cekKartu(localStorage.getItem('deck_kartu'));
+const getBentuk = () => cekBentuk(localStorage.getItem('deck_bentuk'));
+function ambilDraft(kunci) {
+  return draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu(), b: getBentuk() };
+}
+function ubahBentuk(d, b) {
+  d.b = b; d.t = d.t.slice(0, BENTUK[b].maks);
+  localStorage.setItem('deck_bentuk', b);
+}
 
 /* ================== CSV ================== */
 function parseCSV(t) {
@@ -161,6 +222,7 @@ function dariCSV(teks) {
 function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
            username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna), kartu: cekKartu(o.kartu),
+           bentuk: cekBentuk(o.bentuk),
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
 }
 
@@ -273,51 +335,83 @@ async function vote(id, n, btn) {
 }
 async function kirim(kunci, parent, btn) {
   if (!butuhLogin()) return;
-  const d = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu() };
+  const d = ambilDraft(kunci);
   const u = d.u.trim(), t = d.t.trim();
   if (!u) return toast('Isi username dulu.');
   if (!t) return toast('Tulis sesuatu dulu.');
+  if (t.length > BENTUK[d.b].maks) return toast(`Teks terlalu panjang untuk bentuk ini (maks ${BENTUK[d.b].maks}).`);
   btn.disabled = true;
   try {
-    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', warna: d.w, kartu: d.k });
-    lokal.push(normal(j.post)); setUser(u); localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); delete draft[kunci];
-    if (parent) balasTerbuka = null;
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', warna: d.w, kartu: d.k, bentuk: d.b });
+    lokal.push(normal(j.post)); setUser(u);
+    localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); localStorage.setItem('deck_bentuk', d.b);
+    delete draft[kunci];
+    if (parent) balasTerbuka = null; else komposBuka = false;
     toast('Terkirim ✓');
   } catch (e) { toast(e.message); }
-  render();
+  renderAlat(); render();
+}
+
+/* ================== TOMBOL BENTUK DI ATAS ================== */
+function pilihBentukBaru(b) {
+  const d = ambilDraft('baru');
+  if (komposBuka && d.b === b) komposBuka = false;      // klik bentuk yang sama = tutup kartu penulis
+  else { komposBuka = true; ubahBentuk(d, b); }
+  renderAlat(); render();
+}
+function renderAlat() {
+  const el = document.getElementById('alat'); el.innerHTML = '';
+  const aktif = komposBuka ? ambilDraft('baru').b : null;
+  el.append(
+    h('span', {}, 'Tulis di kartu:'),
+    ...Object.keys(BENTUK).map(b => h('button', {
+      type: 'button', class: 'ikon b-' + b + (b === aktif ? ' pilih' : ''),
+      title: `${BENTUK[b].label} · maks ${BENTUK[b].maks} huruf`, 'aria-label': BENTUK[b].label,
+      onclick: () => pilihBentukBaru(b)
+    })),
+    h('span', { class: 'petunjuk' }, aktif ? `${BENTUK[aktif].label} · maks ${BENTUK[aktif].maks} huruf` : 'Pilih bentuk untuk mulai menulis')
+  );
 }
 
 /* ================== RENDER ================== */
-function formulir(kunci, parent, label) {
-  const d = draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu() };
-  const hitung = h('span', {}, `${d.t.length}/${CONFIG.MAKS_TEKS}`);
-  const u = h('input', { type: 'text', placeholder: 'Username (bebas, boleh anonim)', maxlength: CONFIG.MAKS_USERNAME, value: d.u,
+function kompos(kunci, parent) {
+  const d = ambilDraft(kunci);
+  const bt = BENTUK[d.b], maks = bt.maks;
+  const hitung = h('span', {}, `${d.t.length}/${maks}`);
+  const u = h('input', { type: 'text', class: 'in-nama', placeholder: 'username', maxlength: CONFIG.MAKS_USERNAME, value: d.u,
                          oninput: e => { d.u = e.target.value; } });
-  const t = h('textarea', { placeholder: label, maxlength: CONFIG.MAKS_TEKS,
-                            oninput: e => { d.t = e.target.value; hitung.textContent = `${d.t.length}/${CONFIG.MAKS_TEKS}`; } });
+  const t = h('textarea', { class: 'in-teks', rows: bt.baris, maxlength: maks, placeholder: parent ? 'Tulis balasan…' : 'Tulis di sini…',
+                            oninput: e => { d.t = e.target.value; hitung.textContent = `${d.t.length}/${maks}`; } });
   t.value = d.t; t.style.color = d.w;
-  const pilihan = h('div', { class: 'warna' }, h('span', {}, 'Warna teks:'),
+  const kartu = h('div', { class: 'kartu tulis b-' + d.b + (d.b === 'persegi' ? '' : ' lain') }, u, t);
+  kartu.style.background = KARTU[d.k];
+
+  const pilihanTeks = h('div', { class: 'warna' }, h('span', {}, 'Warna teks:'),
     WARNA.map(w => {
       const b = h('button', { type: 'button', title: w, class: w === d.w ? 'pilih' : '', style: 'background:' + w,
-        onclick: () => { d.w = w; t.style.color = w; pilihan.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
+        onclick: () => { d.w = w; t.style.color = w; pilihanTeks.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
       return b;
     }));
   const pilihanKartu = h('div', { class: 'warna' }, h('span', {}, 'Warna kartu:'),
     Object.keys(KARTU).map(k => {
       const b = h('button', { type: 'button', title: k, class: k === d.k ? 'pilih' : '', style: 'background:' + KARTU[k],
-        onclick: () => { d.k = k; pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); terapkan(); } });
+        onclick: () => { d.k = k; kartu.style.background = KARTU[k]; pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
       return b;
     }));
-  const kirimBtn = h('button', { class: 'btn', type: 'submit' }, 'Kirim');
-  const f = h('form', { class: 'isi', onsubmit: e => { e.preventDefault(); kirim(kunci, parent, kirimBtn); } },
-    u, t, pilihan, pilihanKartu, h('div', { class: 'baris' }, hitung, kirimBtn));
-  // preview warna kartu: kartu 'Postingan baru' ikut berubah; pada balasan, kolom ketik diwarnai
-  const terapkan = () => {
-    if (kunci === 'baru') { const kt = f.closest('.kartu'); if (kt) kt.style.background = KARTU[d.k]; }
-    else t.style.background = KARTU[d.k];
-  };
-  if (kunci !== 'baru') terapkan();
-  return f;
+  // balasan boleh memilih bentuknya sendiri (postingan baru memilih lewat tombol di atas halaman)
+  const pilihanBentuk = parent ? h('div', { class: 'bentuk-baris' }, h('span', {}, 'Bentuk:'),
+    Object.keys(BENTUK).map(b => h('button', {
+      type: 'button', class: 'ikon kecil b-' + b + (b === d.b ? ' pilih' : ''),
+      title: `${BENTUK[b].label} · maks ${BENTUK[b].maks} huruf`, 'aria-label': BENTUK[b].label,
+      onclick: () => { ubahBentuk(d, b); render(); }
+    }))) : null;
+
+  const kirimBtn = h('button', { class: 'btn', type: 'button', onclick: () => kirim(kunci, parent, kirimBtn) }, 'Kirim');
+  const batal = h('button', { class: 'btn garis', type: 'button',
+    onclick: () => { if (parent) balasTerbuka = null; else komposBuka = false; renderAlat(); render(); } }, 'Batal');
+  const kontrol = h('div', { class: 'kontrol' }, pilihanBentuk, pilihanTeks, pilihanKartu,
+    h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
+  return h('div', { class: 'kompos' }, kartu, kontrol);
 }
 function tombolVote(p) {
   const s = sayaVote[p.id] || 0;
@@ -326,18 +420,34 @@ function tombolVote(p) {
     h('button', { class: 'btn garis' + (s === 1 ? ' aktif' : ''), onclick: klik(1) }, 'Up ' + p.up),
     h('button', { class: 'btn garis' + (s === -1 ? ' aktif' : ''), onclick: klik(-1) }, 'Down ' + p.down));
 }
-function kartuBalasan(p, i, n) {
+const isiKartu = p => [
+  h('div', { class: 'kepala' },
+    h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
+    tombolVote(p)),
+  h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks)
+];
+function kartuBalasan(p, i, n, prev) {
+  const lain = p.bentuk !== 'persegi';
   const terakhir = i === n - 1;
   const buka = terbuka[p.id] ?? terakhir;
   const langkah = n > 1 ? Math.min(14, 56 / (n - 1)) : 0;   // geser kanan per tingkat
-  const el = h('div', { class: 'balas' + (buka ? '' : ' tutup'), title: buka ? 'Klik untuk menutup' : 'Klik untuk membuka',
-                        onclick: () => { terbuka[p.id] = !buka; render(); } },
-    h('div', { class: 'kepala' },
-      h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
-      tombolVote(p)),
-    h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks));
+  const geser = ((n - 1) * langkah).toFixed(1);
+  const el = lain
+    ? h('div', { class: 'balas kartu lain b-' + p.bentuk }, isiKartu(p))
+    : h('div', { class: 'balas' + (buka ? '' : ' tutup'), title: buka ? 'Klik untuk menutup' : 'Klik untuk membuka',
+                 onclick: () => { terbuka[p.id] = !buka; render(); } }, isiKartu(p));
   el.style.marginLeft = (i * langkah).toFixed(1) + 'px';
-  el.style.width = `calc(100% - ${((n - 1) * langkah).toFixed(1)}px)`;
+  el.style.width = lain ? `min(280px, calc(100% - ${geser}px))` : `calc(100% - ${geser}px)`;
+  // jarak antar balasan: kartu depan menutupi sebagian kartu belakang
+  let mt = 0;
+  if (i > 0) {
+    const prevLain = prev.bentuk !== 'persegi';
+    const prevTutup = !prevLain && !(terbuka[prev.id] ?? false);   // balasan yang bukan terakhir tertutup bawaannya
+    if (lain) mt = -30;
+    else if (prevTutup) mt = -40;
+    else mt = prevLain ? -12 : 6;
+  }
+  el.style.marginTop = mt + 'px';
   // tiap balasan memakai warna pilihan pengirimnya; makin ke depan makin terang agar tumpukan terlihat berlapis
   el.style.background = `color-mix(in srgb, ${KARTU[p.kartu]}, #fff ${((i + 1) * Math.min(10, 40 / n)).toFixed(1)}%)`;
   // tempelan acak (tetap sama untuk balasan yang sama): sedikit miring dan bergeser
@@ -348,39 +458,53 @@ function kartuBalasan(p, i, n) {
   return el;
 }
 function kartuUtama(p, balasan) {
+  const lain = p.bentuk !== 'persegi';
   const item = h('div', { class: 'item' });
   item.style.setProperty('--dx', ((acak(p.id, 'x') - .5) * 20).toFixed(1) + 'px');
   item.style.setProperty('--rot', ((acak(p.id, 'r') - .5) * 2.4).toFixed(2) + 'deg');
   item.style.setProperty('--dy', (acak(p.id, 'y') * 16).toFixed(1) + 'px');
-  const kartu = h('article', { class: 'kartu' },
-    h('div', { class: 'kepala' },
-      h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
-      tombolVote(p)),
-    h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks),
-    h('div', { class: 'bawah' },
-      h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
-      h('span', {}, balasan.length ? balasan.length + ' balasan' : '')),
-    balasTerbuka === p.id ? formulir(p.id, p.id, 'Tulis balasan…') : null);
+  const bawah = h('div', { class: 'bawah' },
+    h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
+    h('span', {}, balasan.length ? balasan.length + ' balasan' : ''));
+  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), lain ? null : bawah);
   kartu.style.background = `color-mix(in srgb, ${KARTU[p.kartu]} 92%, #000)`;   // lapisan paling belakang dalam deck
   item.append(kartu);
+  if (lain) item.append(bawah);
+  if (balasTerbuka === p.id) item.append(kompos(p.id, p.id));
   if (balasan.length) {
-    item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, balasan.length))));
+    item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, balasan.length, balasan[i - 1]))));
   }
   return item;
 }
 function render() {
   const dek = document.getElementById('dek'); dek.innerHTML = '';
-  // kartu penulis baru
-  const kartuBaru = h('div', { class: 'kartu' },
-    h('div', { class: 'judul' }, 'Postingan baru'),
-    formulir('baru', '', 'Apa yang ingin Anda bagikan?'));
-  kartuBaru.style.background = KARTU[draft.baru.k];
-  dek.append(h('div', { class: 'item' }, kartuBaru));
+  if (komposBuka) dek.append(h('div', { class: 'item' }, kompos('baru', '')));
   const all = semua();
   const utama = all.filter(p => !p.parent).sort(urut);
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
   utama.forEach(p => dek.append(kartuUtama(p, (anak[p.id] || []).sort(urut))));
+}
+
+/* ================== TIMER MINGGUAN (Senin 00.00 - Minggu 23.59 WIB) ================== */
+function sisaPekan(sekarang) {
+  const WIB = 7 * 3600 * 1000;
+  const s = new Date(sekarang + WIB);                    // jam dinding WIB, dibaca lewat fungsi UTC
+  const hariKeSenin = (8 - s.getUTCDay()) % 7 || 7;      // 0=Minggu ... 6=Sabtu; Senin 00.00 menghasilkan 7
+  const akhir = Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate() + hariKeSenin) - WIB;
+  return akhir - sekarang;                               // milidetik sampai Senin 00.00 WIB berikutnya
+}
+function teksTimer(ms) {
+  const dua = n => String(n).padStart(2, '0');
+  const hari = Math.floor(ms / 86400000), jam = Math.floor(ms % 86400000 / 3600000);
+  const menit = Math.floor(ms % 3600000 / 60000), detik = Math.floor(ms % 60000 / 1000);
+  if (hari > 0) return `${hari} hari : ${dua(jam)} jam`;
+  if (jam > 0) return `${jam} jam : ${dua(menit)} menit`;
+  return `${menit} menit : ${dua(detik)} detik`;
+}
+function tickTimer() {
+  const el = document.getElementById('timer');
+  if (el) el.textContent = 'Sisa waktu minggu ini: ' + teksTimer(sisaPekan(Date.now()));
 }
 
 /* ================== MULAI ================== */
@@ -390,7 +514,8 @@ function render() {
     b.append(h('div', {}, 'Konfigurasi belum lengkap: isi SCRIPT_URL, CSV_URL, dan GOOGLE_CLIENT_ID di bagian CONFIG pada index.html.'));
   }
   if (!tokenHidup()) { token = ''; sessionStorage.removeItem('tok'); }
-  render(); muat();
+  renderAlat(); render(); muat();
+  tickTimer(); setInterval(tickTimer, 1000);
   setInterval(() => muat(true), CONFIG.REFRESH_MS);
   initGoogle();
   if (tokenHidup() && siap(CONFIG.SCRIPT_URL)) sapa();
