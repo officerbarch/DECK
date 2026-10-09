@@ -54,6 +54,8 @@
   .kartu.lain .membalas { order:1; text-align:center; margin-top:2px; }
   .balas > .bawah { margin-top:8px; font-size:13px; }
   .balas > .bawah .btn { font-size:12px; padding:3px 10px; }
+  .kompos.popup { position:relative; z-index:4; margin:12px 0 4px; padding-top:8px; }
+  .kompos.popup::before { content:''; position:absolute; top:-2px; left:34px; border:9px solid transparent; border-bottom-color:#000; border-top:0; }
   .ke { font-size:13px; color:var(--abu); margin:0 0 4px 4px; }
   .waktu { color:var(--abu); font-size:14px; margin-top:2px; }
   .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
@@ -421,7 +423,7 @@ function kompos(kunci, parent, ke) {
     onclick: () => { if (parent) { balasTerbuka = null; balasKe = null; } else komposBuka = false; renderAlat(); render(); } }, 'Batal');
   const kontrol = h('div', { class: 'kontrol' }, pilihanBentuk, pilihanTeks, pilihanKartu,
     h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
-  return h('div', { class: 'kompos' }, ke ? h('div', { class: 'ke' }, '↳ membalas @' + ke.username) : null, kartu, kontrol);
+  return h('div', { class: 'kompos' + (parent ? ' popup' : '') }, ke ? h('div', { class: 'ke' }, '↳ membalas @' + ke.username) : null, kartu, kontrol);
 }
 function tombolVote(p) {
   const s = sayaVote[p.id] || 0;
@@ -437,11 +439,14 @@ const isiKartu = p => [
   p.membalas ? h('div', { class: 'membalas' }, '↳ membalas @' + p.membalas) : null,
   h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks)
 ];
+function gulirKompos() {
+  requestAnimationFrame(() => { const k = document.querySelector('.kompos'); if (k) k.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+}
 function bukaDek(id) {
   dekBuka = id;
   if (balasTerbuka && balasTerbuka !== id) { balasTerbuka = null; balasKe = null; }   // kotak tulis ikut tertutup bila tumpukannya tertutup
 }
-function kartuBalasan(p, i, n, prev) {
+function kartuBalasan(p, i, n, prev, setelahKompos) {
   const lain = p.bentuk !== 'persegi';
   const langkah = n > 1 ? Math.min(14, 56 / (n - 1)) : 0;   // geser kanan per tingkat
   const geser = ((n - 1) * langkah).toFixed(1);
@@ -449,7 +454,7 @@ function kartuBalasan(p, i, n, prev) {
     e.stopPropagation();
     if (balasTerbuka === p.parent && balasKe === p.id) { balasTerbuka = null; balasKe = null; }
     else { bukaDek(p.parent); balasTerbuka = p.parent; balasKe = p.id; }
-    render();
+    render(); gulirKompos();
   } }, 'Reply'));
   const el = h('div', { class: 'balas' + (lain ? ' kartu lain b-' + p.bentuk : '') }, isiKartu(p), balasBtn);
   // bentuk selain persegi punya sudut kosong, jadi digeser lebih ke samping agar tumpukan terlihat jelas
@@ -463,6 +468,7 @@ function kartuBalasan(p, i, n, prev) {
     if (lain) mt = prev.bentuk === 'persegi' ? -40 : -64;   // bentuk lain naik lebih tinggi, menutupi sudut kosong kartu di bawahnya
     else mt = prevLain ? -14 : 6;
   }
+  if (setelahKompos) mt = 12;   // kotak tulis ada di atasnya, jangan saling menutupi
   el.style.marginTop = mt + 'px';
   // tiap balasan memakai warna pilihan pengirimnya; makin ke depan makin terang agar tumpukan terlihat berlapis
   el.style.background = `color-mix(in srgb, ${KARTU[p.kartu]}, #fff ${((i + 1) * Math.min(10, 40 / n)).toFixed(1)}%)`;
@@ -487,7 +493,7 @@ function kartuUtama(p, balasan) {
       e.stopPropagation();
       if (balasTerbuka === p.id && !balasKe) { balasTerbuka = null; }
       else { bukaDek(p.id); balasTerbuka = p.id; balasKe = null; }
-      render();
+      render(); gulirKompos();
     } }, 'Reply'),
     n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null);
   const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), bawah);
@@ -514,12 +520,17 @@ function kartuUtama(p, balasan) {
   dek.append(kartu);
   item.append(dek);
   if (lapisan) item.style.marginBottom = (lapisan * 7 + 8) + 'px';
+  // kotak tulis muncul langsung di bawah kartu yang dibalas
+  const ke = balasTerbuka === p.id && balasKe ? balasan.find(b => b.id === balasKe) : null;
+  const kotakTulis = () => kompos(ke ? ke.id : p.id, p.id, ke);
+  if (balasTerbuka === p.id && !ke) item.append(kotakTulis());
   if (buka && n) {
-    item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, n, balasan[i - 1]))));
-  }
-  if (balasTerbuka === p.id) {
-    const ke = balasKe ? balasan.find(b => b.id === balasKe) : null;
-    item.append(kompos(ke ? ke.id : p.id, p.id, ke));
+    const isi = [];
+    balasan.forEach((b, i) => {
+      isi.push(kartuBalasan(b, i, n, balasan[i - 1], i > 0 && !!ke && balasan[i - 1].id === ke.id));
+      if (ke && b.id === ke.id) isi.push(kotakTulis());
+    });
+    item.append(h('div', { class: 'tumpukan' }, isi));
   }
   return item;
 }
