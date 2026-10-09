@@ -46,6 +46,8 @@
   .kartu, .balas { font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .lencana { display:inline-block; margin-left:6px; padding:1px 7px; border-radius:99px; background:var(--h); color:var(--p);
+             font-size:11px; font-weight:700; vertical-align:2px; white-space:nowrap; }
   .nama { font-weight:700; font-size:17px; overflow-wrap:anywhere; }
   .waktu { color:var(--abu); font-size:14px; margin-top:2px; }
   .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
@@ -221,7 +223,7 @@ function dariCSV(teks) {
 function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
            username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna), kartu: cekKartu(o.kartu),
-           bentuk: cekBentuk(o.bentuk),
+           bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
 }
 
@@ -421,7 +423,7 @@ function tombolVote(p) {
 }
 const isiKartu = p => [
   h('div', { class: 'kepala' },
-    h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
+    h('div', {}, h('div', { class: 'nama' }, p.username, p.dosen ? h('span', { class: 'lencana', title: 'Akun dosen terverifikasi' }, '✓ Dosen') : null), h('div', { class: 'waktu' }, fmt(p.waktu))),
     tombolVote(p)),
   h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks)
 ];
