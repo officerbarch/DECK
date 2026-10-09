@@ -111,8 +111,10 @@ let draft = {};               // isi formulir yang belum terkirim
 let token = sessionStorage.getItem('tok') || '';
 
 /* ================== UTIL ================== */
-const WARNA = ['#000000', '#1d4ed8', '#b91c1c', '#15803d', '#7e22ce', '#b45309', '#0f766e', '#be185d'];   // harus sama dengan WARNA di Kode.gs
+const WARNA = ['#000000', '#1d4ed8', '#b91c1c', '#15803d', '#7e22ce', '#be185d'];   // harus sama dengan WARNA di Kode.gs
 function cekWarna(w) { w = String(w || '').toLowerCase(); return WARNA.includes(w) ? w : WARNA[0]; }
+const KARTU = { kuning: '#FFF176', pink: '#F8BBD0', biru: '#B3E5FC', hijau: '#C8E6C9', oranye: '#FFCC80', ungu: '#D1C4E9' };  // nama harus sama dengan KARTU di Kode.gs
+function cekKartu(k) { k = String(k || '').toLowerCase(); return KARTU[k] ? k : 'kuning'; }
 const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 function fmt(w) {
   const d = new Date(w); if (isNaN(d)) return '';
@@ -138,6 +140,7 @@ function toast(msg) {
 const getUser = () => localStorage.getItem('deck_user') || '';
 const setUser = v => localStorage.setItem('deck_user', v);
 const getWarna = () => cekWarna(localStorage.getItem('deck_warna'));
+const getKartu = () => cekKartu(localStorage.getItem('deck_kartu'));
 
 /* ================== CSV ================== */
 function parseCSV(t) {
@@ -160,7 +163,7 @@ function dariCSV(teks) {
 }
 function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
-           username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna),
+           username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna), kartu: cekKartu(o.kartu),
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
 }
 
@@ -273,14 +276,14 @@ async function vote(id, n, btn) {
 }
 async function kirim(kunci, parent, btn) {
   if (!butuhLogin()) return;
-  const d = draft[kunci] || { u: getUser(), t: '', w: getWarna() };
+  const d = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu() };
   const u = d.u.trim(), t = d.t.trim();
   if (!u) return toast('Isi username dulu.');
   if (!t) return toast('Tulis sesuatu dulu.');
   btn.disabled = true;
   try {
-    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', warna: d.w });
-    lokal.push(normal(j.post)); setUser(u); localStorage.setItem('deck_warna', d.w); delete draft[kunci];
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', warna: d.w, kartu: d.k });
+    lokal.push(normal(j.post)); setUser(u); localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); delete draft[kunci];
     if (parent) balasTerbuka = null;
     toast('Terkirim ✓');
   } catch (e) { toast(e.message); }
@@ -289,7 +292,7 @@ async function kirim(kunci, parent, btn) {
 
 /* ================== RENDER ================== */
 function formulir(kunci, parent, label) {
-  const d = draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna() };
+  const d = draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu() };
   const hitung = h('span', {}, `${d.t.length}/${CONFIG.MAKS_TEKS}`);
   const u = h('input', { type: 'text', placeholder: 'Username (bebas, boleh anonim)', maxlength: CONFIG.MAKS_USERNAME, value: d.u,
                          oninput: e => { d.u = e.target.value; } });
@@ -302,9 +305,15 @@ function formulir(kunci, parent, label) {
         onclick: () => { d.w = w; t.style.color = w; pilihan.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
       return b;
     }));
+  const pilihanKartu = h('div', { class: 'warna' }, h('span', {}, 'Warna kartu:'),
+    Object.keys(KARTU).map(k => {
+      const b = h('button', { type: 'button', title: k, class: k === d.k ? 'pilih' : '', style: 'background:' + KARTU[k],
+        onclick: () => { d.k = k; pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
+      return b;
+    }));
   const kirimBtn = h('button', { class: 'btn', type: 'submit' }, 'Kirim');
   const f = h('form', { class: 'isi', onsubmit: e => { e.preventDefault(); kirim(kunci, parent, kirimBtn); } },
-    u, t, pilihan, h('div', { class: 'baris' }, hitung, kirimBtn));
+    u, t, pilihan, pilihanKartu, h('div', { class: 'baris' }, hitung, kirimBtn));
   return f;
 }
 function tombolVote(p) {
@@ -326,8 +335,8 @@ function kartuBalasan(p, i, n) {
     h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks));
   el.style.marginLeft = (i * langkah).toFixed(1) + 'px';
   el.style.width = `calc(100% - ${((n - 1) * langkah).toFixed(1)}px)`;
-  // gradasi monokrom satu deck: kartu induk paling gelap (belakang), balasan makin ke depan makin terang
-  el.style.background = `hsl(54, 100%, ${(68 + (i + 1) * Math.min(5, 20 / n)).toFixed(1)}%)`;
+  // tiap balasan memakai warna pilihan pengirimnya; makin ke depan makin terang agar tumpukan terlihat berlapis
+  el.style.background = `color-mix(in srgb, ${KARTU[p.kartu]}, #fff ${((i + 1) * Math.min(10, 40 / n)).toFixed(1)}%)`;
   // tempelan acak (tetap sama untuk balasan yang sama): sedikit miring dan bergeser
   const rot = (acak(p.id, 'rr') - .5) * 5;     // sekitar ±2.5 derajat
   const dx = (acak(p.id, 'rx') - .5) * 10;     // sekitar ±5px
@@ -349,7 +358,7 @@ function kartuUtama(p, balasan) {
       h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
       h('span', {}, balasan.length ? balasan.length + ' balasan' : '')),
     balasTerbuka === p.id ? formulir(p.id, p.id, 'Tulis balasan…') : null);
-  kartu.style.background = 'hsl(54, 100%, 68%)';   // lapisan paling belakang dalam deck
+  kartu.style.background = `color-mix(in srgb, ${KARTU[p.kartu]} 92%, #000)`;   // lapisan paling belakang dalam deck
   item.append(kartu);
   if (balasan.length) {
     item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, balasan.length))));
