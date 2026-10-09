@@ -309,8 +309,8 @@ function kartuBalasan(p, i, n) {
     h('p', { class: 'teks' }, p.teks));
   el.style.marginLeft = (i * langkah).toFixed(1) + 'px';
   el.style.width = `calc(100% - ${((n - 1) * langkah).toFixed(1)}px)`;
-  // tanpa garis tepi: balasan depan lebih terang dari kartu induk, makin ke belakang makin gelap
-  el.style.background = `hsl(54, 100%, ${Math.max(60, 80 - (n - 1 - i) * 4)}%)`;
+  // gradasi monokrom satu deck: kartu induk paling gelap (belakang), balasan makin ke depan makin terang
+  el.style.background = `hsl(54, 100%, ${(68 + (i + 1) * Math.min(5, 20 / n)).toFixed(1)}%)`;
   return el;
 }
 function kartuUtama(p, balasan) {
@@ -327,6 +327,7 @@ function kartuUtama(p, balasan) {
       h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
       h('span', {}, balasan.length ? balasan.length + ' balasan' : '')),
     balasTerbuka === p.id ? formulir(p.id, p.id, 'Tulis balasan…') : null);
+  kartu.style.background = 'hsl(54, 100%, 68%)';   // lapisan paling belakang dalam deck
   item.append(kartu);
   if (balasan.length) {
     item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, balasan.length))));
