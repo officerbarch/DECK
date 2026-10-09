@@ -50,6 +50,11 @@
              border-radius:50%; background:#1d9bf0; color:#fff; font-size:12px; font-weight:900; line-height:1;
              vertical-align:2px; cursor:help; }
   .nama { font-weight:700; font-size:17px; overflow-wrap:anywhere; }
+  .membalas { color:var(--abu); font-size:12px; margin-top:6px; overflow-wrap:anywhere; }
+  .kartu.lain .membalas { order:1; text-align:center; margin-top:2px; }
+  .balas > .bawah { margin-top:8px; font-size:13px; }
+  .balas > .bawah .btn { font-size:12px; padding:3px 10px; }
+  .ke { font-size:13px; color:var(--abu); margin:0 0 4px 4px; }
   .waktu { color:var(--abu); font-size:14px; margin-top:2px; }
   .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
   .aksi { display:flex; gap:6px; flex-shrink:0; }
@@ -150,6 +155,7 @@ let lokal = [];               // postingan yang baru saya kirim (menunggu CSV te
 let override = {};            // jumlah up/down terbaru dari server setelah saya vote
 let sayaVote = {};            // { idPost: 1 | -1 }
 let dekBuka = null;           // id post yang tumpukan balasannya sedang terbuka (hanya satu)
+let balasKe = null;           // id balasan yang sedang dibalas (null = membalas post induk)
 let balasTerbuka = null;      // id post yang kartu balasnya sedang terbuka
 let komposBuka = false;       // kartu penulis baru baru tampil setelah memilih bentuk di atas
 let draft = {};               // isi kartu penulis yang belum terkirim
@@ -226,7 +232,7 @@ function dariCSV(teks) {
 function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
            username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna), kartu: cekKartu(o.kartu),
-           bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
+           membalas: String(o.membalas || '').slice(0, 40), bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
 }
 
@@ -337,7 +343,7 @@ async function vote(id, n, btn) {
   } catch (e) { toast(e.message); }
   render();
 }
-async function kirim(kunci, parent, btn) {
+async function kirim(kunci, parent, btn, ke) {
   if (!butuhLogin()) return;
   const d = ambilDraft(kunci);
   const u = d.u.trim(), t = d.t.trim();
@@ -346,11 +352,11 @@ async function kirim(kunci, parent, btn) {
   if (t.length > BENTUK[d.b].maks) return toast(`Teks terlalu panjang untuk bentuk ini (maks ${BENTUK[d.b].maks}).`);
   btn.disabled = true;
   try {
-    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', warna: d.w, kartu: d.k, bentuk: d.b });
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', membalas: ke ? ke.id : '', warna: d.w, kartu: d.k, bentuk: d.b });
     lokal.push(normal(j.post)); setUser(u);
     localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); localStorage.setItem('deck_bentuk', d.b);
     delete draft[kunci];
-    if (parent) { balasTerbuka = null; dekBuka = parent; } else komposBuka = false;
+    if (parent) { balasTerbuka = null; balasKe = null; dekBuka = parent; } else komposBuka = false;
     toast('Terkirim ✓');
   } catch (e) { toast(e.message); }
   renderAlat(); render();
@@ -378,7 +384,7 @@ function renderAlat() {
 }
 
 /* ================== RENDER ================== */
-function kompos(kunci, parent) {
+function kompos(kunci, parent, ke) {
   const d = ambilDraft(kunci);
   const bt = BENTUK[d.b], maks = bt.maks;
   const hitung = h('span', {}, `${d.t.length}/${maks}`);
@@ -410,12 +416,12 @@ function kompos(kunci, parent) {
       onclick: () => { ubahBentuk(d, b); render(); }
     }))) : null;
 
-  const kirimBtn = h('button', { class: 'btn', type: 'button', onclick: () => kirim(kunci, parent, kirimBtn) }, 'Kirim');
+  const kirimBtn = h('button', { class: 'btn', type: 'button', onclick: () => kirim(kunci, parent, kirimBtn, ke) }, 'Kirim');
   const batal = h('button', { class: 'btn garis', type: 'button',
-    onclick: () => { if (parent) balasTerbuka = null; else komposBuka = false; renderAlat(); render(); } }, 'Batal');
+    onclick: () => { if (parent) { balasTerbuka = null; balasKe = null; } else komposBuka = false; renderAlat(); render(); } }, 'Batal');
   const kontrol = h('div', { class: 'kontrol' }, pilihanBentuk, pilihanTeks, pilihanKartu,
     h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
-  return h('div', { class: 'kompos' }, kartu, kontrol);
+  return h('div', { class: 'kompos' }, ke ? h('div', { class: 'ke' }, '↳ membalas @' + ke.username) : null, kartu, kontrol);
 }
 function tombolVote(p) {
   const s = sayaVote[p.id] || 0;
@@ -428,17 +434,24 @@ const isiKartu = p => [
   h('div', { class: 'kepala' },
     h('div', {}, h('div', { class: 'nama' }, p.username, p.dosen ? h('span', { class: 'lencana', title: 'Dosen terverifikasi', 'aria-label': 'Dosen terverifikasi' }, '✓') : null), h('div', { class: 'waktu' }, fmt(p.waktu))),
     tombolVote(p)),
+  p.membalas ? h('div', { class: 'membalas' }, '↳ membalas @' + p.membalas) : null,
   h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks)
 ];
 function bukaDek(id) {
   dekBuka = id;
-  if (balasTerbuka && balasTerbuka !== id) balasTerbuka = null;   // kotak tulis ikut tertutup bila tumpukannya tertutup
+  if (balasTerbuka && balasTerbuka !== id) { balasTerbuka = null; balasKe = null; }   // kotak tulis ikut tertutup bila tumpukannya tertutup
 }
 function kartuBalasan(p, i, n, prev) {
   const lain = p.bentuk !== 'persegi';
   const langkah = n > 1 ? Math.min(14, 56 / (n - 1)) : 0;   // geser kanan per tingkat
   const geser = ((n - 1) * langkah).toFixed(1);
-  const el = h('div', { class: 'balas' + (lain ? ' kartu lain b-' + p.bentuk : '') }, isiKartu(p));
+  const balasBtn = h('div', { class: 'bawah' }, h('button', { class: 'btn', onclick: e => {
+    e.stopPropagation();
+    if (balasTerbuka === p.parent && balasKe === p.id) { balasTerbuka = null; balasKe = null; }
+    else { bukaDek(p.parent); balasTerbuka = p.parent; balasKe = p.id; }
+    render();
+  } }, 'Reply'));
+  const el = h('div', { class: 'balas' + (lain ? ' kartu lain b-' + p.bentuk : '') }, isiKartu(p), balasBtn);
   // bentuk selain persegi punya sudut kosong, jadi digeser lebih ke samping agar tumpukan terlihat jelas
   const ekstra = lain ? 22 : 0;
   el.style.marginLeft = (i * langkah + (i > 0 ? ekstra : 0)).toFixed(1) + 'px';
@@ -472,7 +485,8 @@ function kartuUtama(p, balasan) {
   const bawah = h('div', { class: 'bawah' },
     h('button', { class: 'btn', onclick: e => {
       e.stopPropagation();
-      if (balasTerbuka === p.id) balasTerbuka = null; else { bukaDek(p.id); balasTerbuka = p.id; }
+      if (balasTerbuka === p.id && !balasKe) { balasTerbuka = null; }
+      else { bukaDek(p.id); balasTerbuka = p.id; balasKe = null; }
       render();
     } }, 'Reply'),
     n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null);
@@ -482,7 +496,7 @@ function kartuUtama(p, balasan) {
   if (n) {
     kartu.title = buka ? 'Klik untuk menutup tumpukan' : 'Klik untuk membuka tumpukan';
     kartu.onclick = () => {
-      if (buka) { dekBuka = null; if (balasTerbuka === p.id) balasTerbuka = null; } else bukaDek(p.id);
+      if (buka) { dekBuka = null; if (balasTerbuka === p.id) { balasTerbuka = null; balasKe = null; } } else bukaDek(p.id);
       render();
     };
   }
@@ -503,7 +517,10 @@ function kartuUtama(p, balasan) {
   if (buka && n) {
     item.append(h('div', { class: 'tumpukan' }, balasan.map((b, i) => kartuBalasan(b, i, n, balasan[i - 1]))));
   }
-  if (balasTerbuka === p.id) item.append(kompos(p.id, p.id));
+  if (balasTerbuka === p.id) {
+    const ke = balasKe ? balasan.find(b => b.id === balasKe) : null;
+    item.append(kompos(ke ? ke.id : p.id, p.id, ke));
+  }
   return item;
 }
 
