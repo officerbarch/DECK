@@ -234,7 +234,7 @@ function dariCSV(teks) {
 function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
            username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna), kartu: cekKartu(o.kartu),
-           membalas: String(o.membalas || '').slice(0, 40), bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
+           membalas: String(o.membalas || '').slice(0, 40), ke: String(o.ke || '').trim(), bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
 }
 
@@ -479,7 +479,28 @@ function kartuBalasan(p, i, n, prev, setelahKompos) {
   el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`;
   return el;
 }
+// urutan tumpukan: balasan utama menurut skor/waktu; balasan atas balasan menempel tepat di bawah tujuannya (lama ke baru)
+function susunBalasan(daftar) {
+  const ada = new Set(daftar.map(b => b.id));
+  const tujuan = b => {
+    if (b.ke && ada.has(b.ke)) return b.ke;
+    if (!b.membalas) return '';
+    // data lama tanpa id tujuan: cari balasan terbaru sebelumnya dengan username itu
+    const c = daftar.filter(x => x.id !== b.id && x.username === b.membalas && String(x.waktu) <= String(b.waktu))
+                    .sort((x, y) => String(y.waktu).localeCompare(String(x.waktu)))[0];
+    return c ? c.id : '';
+  };
+  const anak = {}, atas = [];
+  daftar.forEach(b => { const t = tujuan(b); if (t) (anak[t] = anak[t] || []).push(b); else atas.push(b); });
+  Object.values(anak).forEach(a => a.sort((x, y) => String(x.waktu).localeCompare(String(y.waktu))));
+  const hasil = [], terpakai = new Set();
+  const taruh = b => { if (terpakai.has(b.id)) return; terpakai.add(b.id); hasil.push(b); (anak[b.id] || []).forEach(taruh); };
+  atas.forEach(taruh);
+  daftar.forEach(taruh);   // pengaman bila ada rantai melingkar
+  return hasil;
+}
 function kartuUtama(p, balasan) {
+  balasan = susunBalasan(balasan);
   const lain = p.bentuk !== 'persegi';
   const n = balasan.length;
   const buka = dekBuka === p.id;
