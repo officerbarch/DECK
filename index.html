@@ -4,11 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root { --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176; }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
+  body { margin:0; background-color:var(--p); background-image:radial-gradient(#b5b5b5 1px, transparent 1.2px);
+         background-size:22px 22px; color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
            max-width:1200px; margin:0 auto; padding:22px 24px 10px; }
   h1 { margin:0; font-size:40px; letter-spacing:1px; }
@@ -21,16 +25,17 @@
 
   /* kartu */
   .kartu { background:var(--kuning); border:none; padding:16px 18px; }
+  .kartu, .balas { font-family:'Gloria Hallelujah','Segoe Print','Bradley Hand',cursive; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-  .nama { font-weight:700; font-size:16px; overflow-wrap:anywhere; }
+  .nama { font-weight:400; font-size:16px; overflow-wrap:anywhere; }
   .waktu { color:var(--abu); font-size:13px; margin-top:2px; }
   .teks { margin:10px 0 12px; text-align:justify; white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; }
   .aksi { display:flex; gap:6px; flex-shrink:0; }
-  .bawah { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--abu); }
+  .bawah { display:flex; align-items:center; gap:12px; font-size:14px; color:var(--abu); }
 
   /* tombol */
-  .btn { font:inherit; font-size:12px; background:var(--h); color:var(--p); border:2px solid transparent;
+  .btn { font:inherit; font-size:13px; background:var(--h); color:var(--p); border:2px solid transparent;
          border-radius:0; padding:6px 14px; cursor:pointer; }
   .btn:hover:not(:disabled) { background:var(--p); color:var(--h); }
   .btn:disabled { opacity:.45; cursor:wait; }
@@ -51,12 +56,15 @@
 
   /* formulir */
   form.isi { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-  input[type=text], textarea { font:inherit; font-size:14px; border:none; border-radius:0;
+  input[type=text], textarea { font:inherit; font-size:15px; border:none; border-radius:0;
                                padding:8px 10px; width:100%; background:var(--p); color:var(--h); }
   input[type=text]:focus, textarea:focus { outline:1px solid var(--h); }
   textarea { min-height:84px; resize:vertical; }
-  .baris { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; color:var(--abu); }
+  .baris { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; color:var(--abu); }
   .judul { font-weight:700; margin-bottom:2px; }
+  .warna { display:flex; flex-wrap:wrap; align-items:center; gap:7px; font-size:14px; }
+  .warna button { width:22px; height:22px; border:none; border-radius:50%; padding:0; cursor:pointer; }
+  .warna button.pilih { outline:2px solid var(--h); outline-offset:2px; }
 
   #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--h); color:var(--p);
            padding:10px 18px; font-size:14px; display:none; max-width:90vw; z-index:10; }
@@ -103,6 +111,8 @@ let draft = {};               // isi formulir yang belum terkirim
 let token = sessionStorage.getItem('tok') || '';
 
 /* ================== UTIL ================== */
+const WARNA = ['#000000', '#1d4ed8', '#b91c1c', '#15803d', '#7e22ce', '#b45309', '#0f766e', '#be185d'];   // harus sama dengan WARNA di Kode.gs
+function cekWarna(w) { w = String(w || '').toLowerCase(); return WARNA.includes(w) ? w : WARNA[0]; }
 const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 function fmt(w) {
   const d = new Date(w); if (isNaN(d)) return '';
@@ -127,6 +137,7 @@ function toast(msg) {
 }
 const getUser = () => localStorage.getItem('deck_user') || '';
 const setUser = v => localStorage.setItem('deck_user', v);
+const getWarna = () => cekWarna(localStorage.getItem('deck_warna'));
 
 /* ================== CSV ================== */
 function parseCSV(t) {
@@ -149,7 +160,7 @@ function dariCSV(teks) {
 }
 function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
-           username: String(o.username || ''), teks: String(o.teks || ''),
+           username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna),
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
 }
 
@@ -262,14 +273,14 @@ async function vote(id, n, btn) {
 }
 async function kirim(kunci, parent, btn) {
   if (!butuhLogin()) return;
-  const d = draft[kunci] || { u: getUser(), t: '' };
+  const d = draft[kunci] || { u: getUser(), t: '', w: getWarna() };
   const u = d.u.trim(), t = d.t.trim();
   if (!u) return toast('Isi username dulu.');
   if (!t) return toast('Tulis sesuatu dulu.');
   btn.disabled = true;
   try {
-    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '' });
-    lokal.push(normal(j.post)); setUser(u); delete draft[kunci];
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', warna: d.w });
+    lokal.push(normal(j.post)); setUser(u); localStorage.setItem('deck_warna', d.w); delete draft[kunci];
     if (parent) balasTerbuka = null;
     toast('Terkirim ✓');
   } catch (e) { toast(e.message); }
@@ -278,16 +289,22 @@ async function kirim(kunci, parent, btn) {
 
 /* ================== RENDER ================== */
 function formulir(kunci, parent, label) {
-  const d = draft[kunci] = draft[kunci] || { u: getUser(), t: '' };
+  const d = draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna() };
   const hitung = h('span', {}, `${d.t.length}/${CONFIG.MAKS_TEKS}`);
   const u = h('input', { type: 'text', placeholder: 'Username (bebas, boleh anonim)', maxlength: CONFIG.MAKS_USERNAME, value: d.u,
                          oninput: e => { d.u = e.target.value; } });
   const t = h('textarea', { placeholder: label, maxlength: CONFIG.MAKS_TEKS,
                             oninput: e => { d.t = e.target.value; hitung.textContent = `${d.t.length}/${CONFIG.MAKS_TEKS}`; } });
-  t.value = d.t;
+  t.value = d.t; t.style.color = d.w;
+  const pilihan = h('div', { class: 'warna' }, h('span', {}, 'Warna teks:'),
+    WARNA.map(w => {
+      const b = h('button', { type: 'button', title: w, class: w === d.w ? 'pilih' : '', style: 'background:' + w,
+        onclick: () => { d.w = w; t.style.color = w; pilihan.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
+      return b;
+    }));
   const kirimBtn = h('button', { class: 'btn', type: 'submit' }, 'Kirim');
   const f = h('form', { class: 'isi', onsubmit: e => { e.preventDefault(); kirim(kunci, parent, kirimBtn); } },
-    u, t, h('div', { class: 'baris' }, hitung, kirimBtn));
+    u, t, pilihan, h('div', { class: 'baris' }, hitung, kirimBtn));
   return f;
 }
 function tombolVote(p) {
@@ -306,7 +323,7 @@ function kartuBalasan(p, i, n) {
     h('div', { class: 'kepala' },
       h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
       tombolVote(p)),
-    h('p', { class: 'teks' }, p.teks));
+    h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks));
   el.style.marginLeft = (i * langkah).toFixed(1) + 'px';
   el.style.width = `calc(100% - ${((n - 1) * langkah).toFixed(1)}px)`;
   // gradasi monokrom satu deck: kartu induk paling gelap (belakang), balasan makin ke depan makin terang
@@ -322,7 +339,7 @@ function kartuUtama(p, balasan) {
     h('div', { class: 'kepala' },
       h('div', {}, h('div', { class: 'nama' }, p.username), h('div', { class: 'waktu' }, fmt(p.waktu))),
       tombolVote(p)),
-    h('p', { class: 'teks' }, p.teks),
+    h('p', { class: 'teks', style: 'color:' + p.warna }, p.teks),
     h('div', { class: 'bawah' },
       h('button', { class: 'btn', onclick: () => { balasTerbuka = balasTerbuka === p.id ? null : p.id; render(); } }, 'Reply'),
       h('span', {}, balasan.length ? balasan.length + ' balasan' : '')),
