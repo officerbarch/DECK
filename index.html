@@ -26,7 +26,7 @@
 
   /* deretan tombol bentuk */
   #alat { max-width:1200px; margin:0 auto; padding:6px 24px 4px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
-  .petunjuk { color:var(--abu); }
+  .petunjuk { color:var(--h); }
   #titik { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
   .ikon { width:34px; height:34px; background:#9a9a9a; border:none; padding:0; cursor:pointer; flex-shrink:0; }
   .ikon.kecil { width:26px; height:26px; }
@@ -119,8 +119,9 @@
   .warna button { width:22px; height:22px; border:none; border-radius:50%; padding:0; cursor:pointer; }
   .warna button.pilih { outline:2px solid var(--h); outline-offset:2px; }
 
-  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--h); color:var(--p);
-           padding:10px 18px; font-size:14px; display:none; max-width:90vw; z-index:10; }
+  #toast { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:var(--h); color:var(--p);
+           padding:16px 26px; font-size:16px; line-height:1.4; text-align:center; display:none; max-width:min(90vw, 420px);
+           z-index:100; pointer-events:none; box-shadow:0 0 0 6px rgba(255,255,255,.85); }
   #banner { max-width:1200px; margin:0 auto; padding:0 24px; font-size:14px; }
   #banner div { border:2px dashed var(--h); padding:10px 14px; margin:8px 0; }
 </style>
@@ -393,7 +394,7 @@ function renderAlat() {
       title: `${BENTUK[b].label} · maks ${BENTUK[b].maks} huruf`, 'aria-label': BENTUK[b].label,
       onclick: () => pilihBentukBaru(b)
     })),
-    h('span', { class: 'petunjuk' }, aktif ? `${BENTUK[aktif].label} · maks ${BENTUK[aktif].maks} huruf` : 'Pilih bentuk untuk mulai menulis')
+    aktif ? h('span', { class: 'petunjuk' }, `${BENTUK[aktif].label} · maks ${BENTUK[aktif].maks} huruf`) : null
   );
 }
 
