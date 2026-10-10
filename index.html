@@ -20,6 +20,9 @@
            max-width:1200px; margin:0 auto; padding:22px 24px 10px; }
   h1 { margin:0; font-size:clamp(11px, 2.9vw, 26px); font-weight:400; white-space:nowrap; }
   h1 b { font-weight:700; }
+  @media (max-width:640px) {
+    h1 { font-size:21px; white-space:normal; line-height:1.25; }
+  }
   footer { max-width:1200px; margin:0 auto; padding:0 24px 16px; text-align:center; font-size:11px; color:var(--h); }
   #timer { font-size:14px; margin-bottom:6px; }
   #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
@@ -325,8 +328,7 @@ function initGoogle() {
 function renderLogin() {
   const el = document.getElementById('login'); el.innerHTML = '';
   if (tokenHidup()) {
-    el.append(h('span', {}, 'Masuk ✓ (identitas Anda tidak ditampilkan)'),
-              h('button', { class: 'btn garis', onclick: () => keluar() }, 'Keluar'));
+    el.append(h('button', { class: 'btn', onclick: () => keluar() }, 'Keluar'));
   } else if (siap(CONFIG.GOOGLE_CLIENT_ID) && window.google && google.accounts) {
     const slot = h('div'); el.append(slot);
     google.accounts.id.renderButton(slot, { theme: 'outline', size: 'medium', text: 'signin_with' });
