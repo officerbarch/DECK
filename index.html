@@ -29,6 +29,18 @@
   }
   .judul { flex:1 1 auto; min-width:0; }
   #timer { font-size:13px; margin-top:4px; }
+  #btn-help { position:fixed; right:12px; bottom:10px; z-index:25; }
+  @media (max-width:640px) { #btn-help { bottom:76px; } }
+  #bantuan { position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:16px;
+             background:rgba(255,255,255,.72); }
+  #bantuan.buka { display:flex; }
+  #bantuan .lembar { background:#FFF176; width:100%; max-width:560px; max-height:86vh; overflow:auto; padding:20px 24px 22px;
+                     font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; font-size:15px; line-height:1.45; transform:rotate(-.4deg); }
+  #bantuan h2 { margin:0 0 10px; font-size:21px; }
+  #bantuan h3 { margin:14px 0 2px; font-size:16px; }
+  #bantuan p { margin:0; }
+  #bantuan .tutup-bantuan { margin-top:18px; }
+  #bantuan .ikon.kecil { display:inline-block; width:14px; height:14px; margin:0 3px; vertical-align:-2px; background:#555; cursor:default; }
   #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
 
   /* deretan tombol bentuk */
@@ -54,6 +66,9 @@
   /* kartu */
   .kartu { background:var(--kuning); border:none; padding:16px 18px; }
   .kartu, .balas { font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; }
+  .item.terbuka { position:relative; margin-top:calc(var(--dy,0px) + 16px); margin-bottom:16px; }
+  .item.terbuka::after { content:''; position:absolute; inset:-13px; border:3px dotted #000; border-radius:4px 7px 5px 8px;
+                         pointer-events:none; z-index:0; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .lencana { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; margin-left:6px;
@@ -145,12 +160,14 @@
   </div>
   <div id="login"></div>
 </header>
+<button type="button" id="btn-help" class="btn">Help</button>
 <nav id="alat"></nav>
 <div id="banner"></div>
 <main class="dek" id="dek"></main>
 <footer>
-  by Nurfahmi Muchlis - Arsitektur ITS | 2026
+  Nurfahmi Muchlis - Arsitektur ITS | 2026
 </footer>
+<div id="bantuan"></div>
 <div id="toast"></div>
 
 <script>
@@ -569,6 +586,7 @@ function kartuUtama(p, balasan) {
   const kotakTulis = () => kompos(ke ? ke.id : p.id, p.id, ke);
   if (balasTerbuka === p.id && !ke) item.append(kotakTulis());
   if (buka && n) {
+    item.classList.add('terbuka');   // bingkai bertitik di sekeliling tumpukan yang terbuka
     const isi = [];
     balasan.forEach((b, i) => {
       isi.push(kartuBalasan(b, i, n, balasan[i - 1], i > 0 && !!ke && balasan[i - 1].id === ke.id));
@@ -579,6 +597,37 @@ function kartuUtama(p, balasan) {
   return item;
 }
 
+/* ---------- Bantuan (tombol Help) ---------- */
+function isiBantuan() {
+  const batas = Object.keys(BENTUK).map(b => `${BENTUK[b].label} ${BENTUK[b].maks}`).join(', ');
+  const bagian = (judul, teks) => [h('h3', {}, judul), h('p', {}, teks)];
+  return h('div', { class: 'lembar', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Cara memakai deck' },
+    h('h2', {}, 'Cara memakai deck'),
+    h('p', {}, 'deck adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Kartu yang paling dibutuhkan naik ke atas.'),
+    ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
+    ...bagian('Menulis kartu', 'Masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '.'),
+    ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Reply di kartu utama untuk membalas postingan, atau Reply di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
+    ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
+    ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
+    ...bagian('Reset mingguan', 'Papan di-reset seminggu sekali. Hitung mundur di bawah judul menunjukkan sisa waktu tempel catatan minggu ini.'),
+    ...bagian('Privasi', 'Email akunmu tidak ditampilkan di papan. Email tetap dicatat di sistem (hanya terlihat oleh pengelola) untuk mencegah suara ganda dan penyalahgunaan.'),
+    h('button', { type: 'button', class: 'btn tutup-bantuan', onclick: () => tutupBantuan() }, 'Tutup'));
+}
+function bukaBantuan() {
+  const lapis = document.getElementById('bantuan');
+  lapis.innerHTML = ''; lapis.append(isiBantuan()); lapis.classList.add('buka');
+  lapis.querySelector('.tutup-bantuan').focus({ preventScroll: true });
+}
+function tutupBantuan() {
+  document.getElementById('bantuan').classList.remove('buka');
+  if (location.hash === '#help') history.replaceState(null, '', location.pathname + location.search);
+}
+function bantuanMulai() {
+  document.getElementById('btn-help').addEventListener('click', bukaBantuan);
+  document.getElementById('bantuan').addEventListener('click', e => { if (e.target.id === 'bantuan') tutupBantuan(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') tutupBantuan(); });
+  if (location.hash === '#help') bukaBantuan();   // tautan langsung: .../#help
+}
 /* ---------- Latar titik: titik menjauh dari kursor mouse ---------- */
 const TITIK = { jarak: 22, jari: 1.2, warna: '#9a9a9a', dorong: 38, radius: 130, kecepatan: .14 };
 const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false };
@@ -683,6 +732,7 @@ function tickTimer() {
   renderAlat(); render(); muat();
   tickTimer(); setInterval(tickTimer, 1000);
   titikMulai();
+  bantuanMulai();
   setInterval(() => muat(true), CONFIG.REFRESH_MS);
   initGoogle();
   if (tokenHidup() && siap(CONFIG.SCRIPT_URL)) sapa();
