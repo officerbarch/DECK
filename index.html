@@ -10,10 +10,23 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
-    --h:#000; --p:#fff; --abu:#555; --kuning:#FFF176;
+    --h:#000; --p:#fff; --abu:#555; --kuning:#FEE440;
     --c-enam: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
     --c-lima: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
   }
+  /* mode gelap: latar jadi hitam, teks putih; kartu tetap berwarna dengan teks gelap */
+  :root[data-tema="gelap"] { --h:#fff; --p:#000; --abu:#aaa; }
+  :root[data-tema="gelap"] .kartu, :root[data-tema="gelap"] .balas, :root[data-tema="gelap"] .kompos,
+  :root[data-tema="gelap"] #bantuan .lembar, :root[data-tema="gelap"] .kontrol { --h:#000; --p:#fff; --abu:#555; color:#000; }
+  :root[data-tema="gelap"] .kartu:not(.lapis), :root[data-tema="gelap"] .balas { filter:brightness(.92); }
+  :root[data-tema="gelap"] #bantuan { background:rgba(0,0,0,.72); }
+  :root[data-tema="gelap"] .petunjuk { background:#000; color:#fff; }
+  :root[data-tema="gelap"] #toast { box-shadow:0 0 0 6px rgba(0,0,0,.85); }
+  :root[data-tema="gelap"] .ikon { background:#777; }
+  :root[data-tema="gelap"] .ikon:hover, :root[data-tema="gelap"] .ikon.pilih { background:#fff; }
+  :root[data-tema="gelap"] .item.terbuka > .bingkai path { stroke:#9a9a9a; }
+  #btn-tema { position:fixed; right:78px; bottom:10px; z-index:25; }
+  @media (max-width:640px) { #btn-tema { bottom:76px; } }
   * { box-sizing: border-box; }
   body { padding-bottom:84px; margin:0; background-color:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
@@ -28,13 +41,13 @@
     footer { position:fixed; left:0; bottom:0; margin:0; padding:0 0 10px 16px; z-index:15; pointer-events:none; }
   }
   .judul { flex:1 1 auto; min-width:0; }
-  #timer { font-size:13px; margin-top:4px; }
+  #timer { font-size:13px; margin-top:4px; font-weight:700; }
   #btn-help { position:fixed; right:12px; bottom:10px; z-index:25; }
   @media (max-width:640px) { #btn-help { bottom:76px; } }
   #bantuan { position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:16px;
              background:rgba(255,255,255,.72); }
   #bantuan.buka { display:flex; }
-  #bantuan .lembar { background:#FFF176; width:100%; max-width:560px; max-height:86vh; overflow:auto; padding:20px 24px 22px;
+  #bantuan .lembar { background:#FEE440; width:100%; max-width:560px; max-height:86vh; overflow:auto; padding:20px 24px 22px;
                      font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; font-size:15px; line-height:1.45; transform:rotate(-.4deg); }
   #bantuan h2 { margin:0 0 10px; font-size:21px; }
   #bantuan h3 { margin:14px 0 2px; font-size:16px; }
@@ -66,9 +79,9 @@
   /* kartu */
   .kartu { background:var(--kuning); border:none; padding:16px 18px; }
   .kartu, .balas { font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; }
-  .item.terbuka { position:relative; margin-top:calc(var(--dy,0px) + 16px); margin-bottom:16px; }
-  .item.terbuka::after { content:''; position:absolute; inset:-13px; border:3px dotted #000; border-radius:4px 7px 5px 8px;
-                         pointer-events:none; z-index:0; }
+  .item.terbuka { position:relative; margin-top:calc(var(--dy,0px) + 8px); margin-bottom:8px; padding:var(--pad, 16px); }
+  .item.terbuka > .bingkai { position:absolute; left:0; top:0; width:1px; height:1px; overflow:visible; pointer-events:none; }
+  .item.terbuka > .bingkai path { fill:none; stroke:#8a8a8a; stroke-width:2; stroke-dasharray:2 2; stroke-linejoin:round; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .lencana { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; margin-left:6px;
@@ -141,6 +154,7 @@
   .tombol { display:flex; gap:8px; }
   .warna, .bentuk-baris { display:flex; flex-wrap:wrap; align-items:center; gap:7px; font-size:14px; }
   .warna button { width:22px; height:22px; border:none; border-radius:50%; padding:0; cursor:pointer; }
+  .warna button.putih { box-shadow:inset 0 0 0 1px #888; }
   .warna button.pilih { outline:2px solid var(--h); outline-offset:2px; }
 
   #toast { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:var(--h); color:var(--p);
@@ -161,6 +175,7 @@
   <div id="login"></div>
 </header>
 <button type="button" id="btn-help" class="btn">Help</button>
+<button type="button" id="btn-tema" class="btn" aria-label="Ganti mode terang/gelap"></button>
 <nav id="alat"></nav>
 <div id="banner"></div>
 <main class="dek" id="dek"></main>
@@ -195,9 +210,18 @@ let draft = {};               // isi kartu penulis yang belum terkirim
 let token = sessionStorage.getItem('tok') || '';
 
 /* ================== UTIL ================== */
-const WARNA = ['#000000', '#1d4ed8', '#b91c1c', '#15803d', '#7e22ce', '#be185d'];   // harus sama dengan WARNA di Kode.gs
-function cekWarna(w) { w = String(w || '').toLowerCase(); return WARNA.includes(w) ? w : WARNA[0]; }
-const KARTU = { kuning: '#FFF176', pink: '#F8BBD0', biru: '#B3E5FC', hijau: '#C8E6C9', oranye: '#FFCC80', ungu: '#D1C4E9' };  // nama harus sama dengan KARTU di Kode.gs
+const WARNA = ['#000000', '#ffffff', '#1e3a8a', '#991b1b', '#166534'];   // maksimum 5; harus sama dengan WARNA di Kode.gs
+const WARNA_LAMA = ['#1d4ed8', '#b91c1c', '#15803d', '#7e22ce', '#be185d'];   // warna teks versi lama: tetap tampil di kiriman lama
+function cekWarna(w) { w = String(w || '').toLowerCase(); return WARNA.includes(w) || WARNA_LAMA.includes(w) ? w : WARNA[0]; }
+const KARTU = { ungu: '#9B5DE5', pink: '#F15BB5', kuning: '#FEE440', biru: '#00BBF9', hijau: '#00F5D4' };  // nama harus sama dengan KARTU di Kode.gs
+// kontras teks terhadap warna kartu (WCAG)
+function luminans(hex) {
+  const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4));
+  return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+}
+function kontras(a, b) { const x = luminans(a), y = luminans(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+// hitam dan putih selalu tersedia; warna lain hanya bila cukup terbaca di atas kartu itu
+const warnaTersedia = kartuHex => WARNA.filter(w => w === '#000000' || w === '#ffffff' || kontras(w, kartuHex) >= 3);
 function cekKartu(k) { k = String(k || '').toLowerCase(); return KARTU[k] ? k : 'kuning'; }
 // batas huruf per bentuk (angka harus sama dengan BENTUK di Kode.gs)
 const BENTUK = {
@@ -438,16 +462,19 @@ function kompos(kunci, parent, ke) {
   const kartu = h('div', { class: 'kartu tulis b-' + d.b + (d.b === 'persegi' ? '' : ' lain') }, u, t);
   kartu.style.background = KARTU[d.k];
 
-  const pilihanTeks = h('div', { class: 'warna' }, h('span', {}, 'Warna teks:'),
-    WARNA.map(w => {
-      const b = h('button', { type: 'button', title: w, class: w === d.w ? 'pilih' : '', style: 'background:' + w,
-        onclick: () => { d.w = w; t.style.color = w; pilihanTeks.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
-      return b;
-    }));
+  const pilihanTeks = h('div', { class: 'warna' });
+  const gambarTeks = () => {
+    const ada = warnaTersedia(KARTU[d.k]);
+    if (!ada.includes(d.w) || kontras(d.w, KARTU[d.k]) < 3) d.w = kontras('#000000', KARTU[d.k]) >= kontras('#ffffff', KARTU[d.k]) ? '#000000' : '#ffffff';
+    t.style.color = d.w;
+    pilihanTeks.replaceChildren(h('span', {}, 'Warna teks:'), ...ada.map(w => h('button', { type: 'button', title: w, class: (w === d.w ? 'pilih' : '') + (w === '#ffffff' ? ' putih' : ''), style: 'background:' + w,
+      onclick: () => { d.w = w; t.style.color = w; gambarTeks(); } })));
+  };
+  gambarTeks();
   const pilihanKartu = h('div', { class: 'warna' }, h('span', {}, 'Warna kartu:'),
     Object.keys(KARTU).map(k => {
       const b = h('button', { type: 'button', title: k, class: k === d.k ? 'pilih' : '', style: 'background:' + KARTU[k],
-        onclick: () => { d.k = k; kartu.style.background = KARTU[k]; pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
+        onclick: () => { d.k = k; kartu.style.background = KARTU[k]; gambarTeks(); pilihanKartu.querySelectorAll('button').forEach(x => x.classList.toggle('pilih', x === b)); } });
       return b;
     }));
   // balasan boleh memilih bentuknya sendiri (postingan baru memilih lewat tombol di atas halaman)
@@ -586,7 +613,9 @@ function kartuUtama(p, balasan) {
   const kotakTulis = () => kompos(ke ? ke.id : p.id, p.id, ke);
   if (balasTerbuka === p.id && !ke) item.append(kotakTulis());
   if (buka && n) {
-    item.classList.add('terbuka');   // bingkai bertitik di sekeliling tumpukan yang terbuka
+    item.classList.add('terbuka');   // garis putus-putus gabungan di sekeliling tumpukan yang terbuka
+    item.dataset.bentuk = p.bentuk;
+    item.style.setProperty('--pad', '22px');
     const isi = [];
     balasan.forEach((b, i) => {
       isi.push(kartuBalasan(b, i, n, balasan[i - 1], i > 0 && !!ke && balasan[i - 1].id === ke.id));
@@ -628,6 +657,105 @@ function bantuanMulai() {
   addEventListener('keydown', e => { if (e.key === 'Escape') tutupBantuan(); });
   if (location.hash === '#help') bukaBantuan();   // tautan langsung: .../#help
 }
+/* ---------- Garis putus-putus gabungan di sekeliling tumpukan terbuka ----------
+   Semua kartu (utama, balasan, kotak tulis) digambar ke kanvas tersembunyi, dibesarkan 10px, lalu tepi luarnya
+   ditelusuri menjadi satu jalur SVG. */
+const OFFSET_BINGKAI = 10, SKALA_B = 2, MARGIN_B = 40;
+function lukisBentuk(c, bentuk, w, h) {
+  const poli = pts => { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); };
+  if (bentuk === 'lingkaran') { c.beginPath(); c.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2); return; }
+  if (bentuk === 'tumpul') { c.beginPath(); c.roundRect(0, 0, w, h, 22); return; }
+  if (bentuk === 'enam') return poli([[.25, 0], [.75, 0], [1, .5], [.75, 1], [.25, 1], [0, .5]].map(p => [p[0] * w, p[1] * h]));
+  if (bentuk === 'lima') return poli([[.5, 0], [1, .38], [.82, 1], [.18, 1], [0, .38]].map(p => [p[0] * w, p[1] * h]));
+  if (bentuk === 'ledak') {
+    const m = document.documentElement.style.getPropertyValue('--c-ledak').match(/-?[\d.]+(?=%)/g) || [];
+    const pts = []; for (let i = 0; i + 1 < m.length; i += 2) pts.push([m[i] / 100 * w, m[i + 1] / 100 * h]);
+    if (pts.length > 2) return poli(pts);
+  }
+  c.beginPath(); c.rect(0, 0, w, h);   // persegi
+}
+function telusuriTepi(g, W, H) {   // Moore neighbour tracing: tepi luar bidang terisi
+  const at = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y * W + x] === 1;
+  let sx = -1, sy = -1;
+  for (let y = 0; y < H && sx < 0; y++) for (let x = 0; x < W; x++) if (at(x, y)) { sx = x; sy = y; break; }
+  if (sx < 0) return [];
+  const D = [[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]];
+  const out = [[sx, sy]]; let px = sx, py = sy, back = 0;
+  for (let n = 0; n < W * H; n++) {
+    let ketemu = false;
+    for (let k = 1; k <= 8; k++) {
+      const i = (back + k) % 8, qx = px + D[i][0], qy = py + D[i][1];
+      if (at(qx, qy)) {
+        const j = (i + 7) % 8, vx = px + D[j][0] - qx, vy = py + D[j][1] - qy;
+        back = D.findIndex(d => d[0] === vx && d[1] === vy);
+        px = qx; py = qy; ketemu = true; break;
+      }
+    }
+    if (!ketemu || (px === sx && py === sy)) break;
+    out.push([px, py]);
+  }
+  return out;
+}
+function sederhanakan(pts, eps) {   // Ramer–Douglas–Peucker (tertutup: dipecah di dua titik terjauh)
+  const rdp = (a) => {
+    if (a.length < 3) return a;
+    const [x1, y1] = a[0], [x2, y2] = a[a.length - 1], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+    let mx = 0, mi = 0;
+    for (let i = 1; i < a.length - 1; i++) { const d = Math.abs(dy * (a[i][0] - x1) - dx * (a[i][1] - y1)) / L; if (d > mx) { mx = d; mi = i; } }
+    if (mx <= eps) return [a[0], a[a.length - 1]];
+    return rdp(a.slice(0, mi + 1)).slice(0, -1).concat(rdp(a.slice(mi)));
+  };
+  const n = pts.length; if (n < 8) return pts;
+  let j = 0, best = -1;
+  for (let i = 0; i < n; i++) { const d = Math.hypot(pts[i][0] - pts[0][0], pts[i][1] - pts[0][1]); if (d > best) { best = d; j = i; } }
+  const A = rdp(pts.slice(0, j + 1)), B = rdp(pts.slice(j).concat([pts[0]]));
+  return A.slice(0, -1).concat(B.slice(0, -1));
+}
+function gambarSatuBingkai(item) {
+  const iw = item.offsetWidth, ih = item.offsetHeight;
+  const S = SKALA_B, M = MARGIN_B, W = Math.ceil((iw + 2 * M) * S), H = Math.ceil((ih + 2 * M) * S);
+  const kv = document.createElement('canvas'); kv.width = W; kv.height = H;
+  const c = kv.getContext('2d', { willReadFrequently: true });
+  c.fillStyle = c.strokeStyle = '#000'; c.lineWidth = OFFSET_BINGKAI * 2 * S; c.lineJoin = 'round';
+  item.querySelectorAll('.kartu, .balas, .kompos').forEach(el => {
+    const w = el.offsetWidth, hh = el.offsetHeight; if (!w || !hh) return;
+    let x = w / 2, y = hh / 2, o = el;   // pusat kartu dalam koordinat item (tata letak, tanpa transform)
+    while (o && o !== item) { x += o.offsetLeft; y += o.offsetTop; o = o.offsetParent; }
+    if (o !== item) return;
+    const tf = getComputedStyle(el).transform, m = tf && tf !== 'none' ? new DOMMatrix(tf) : new DOMMatrix();
+    const mm = (/b-(\w+)/.exec(el.className) || [])[1] || 'persegi';
+    c.setTransform(S, 0, 0, S, 0, 0);
+    c.translate(M + x + m.e, M + y + m.f); c.transform(m.a, m.b, m.c, m.d, 0, 0); c.translate(-w / 2, -hh / 2);
+    lukisBentuk(c, mm, w, hh); c.fill(); c.stroke();
+  });
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  const data = c.getImageData(0, 0, W, H).data, g = new Uint8Array(W * H);
+  for (let i = 0; i < g.length; i++) g[i] = data[i * 4 + 3] > 127 ? 1 : 0;
+  let tepi = telusuriTepi(g, W, H);
+  // haluskan sedikit (hilangkan tangga piksel), lalu sederhanakan
+  const n = tepi.length, k = 8;
+  if (n > 2 * k + 2) tepi = tepi.map((_, i) => { let sx = 0, sy = 0; for (let d = -k; d <= k; d++) { const q = tepi[(i + d + n) % n]; sx += q[0]; sy += q[1]; } return [sx / (2 * k + 1), sy / (2 * k + 1)]; });
+  const pts = sederhanakan(tepi, .25 * S).map(p => [p[0] / S - M + .5 / S, p[1] / S - M + .5 / S]);
+  let svg = item.querySelector(':scope > .bingkai');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'bingkai'); svg.setAttribute('aria-hidden', 'true');
+    svg.append(document.createElementNS('http://www.w3.org/2000/svg', 'path'));
+    item.prepend(svg);
+  }
+  svg.firstChild.setAttribute('d', pts.length ? 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L') + ' Z' : '');
+}
+function gambarBingkai() {
+  document.querySelectorAll('.item.terbuka').forEach(item => {
+    gambarSatuBingkai(item);
+    if (!item._ro && window.ResizeObserver) {   // kotak tulis tumbuh / ukuran berubah: gambar ulang
+      let t = 0;
+      item._ro = new ResizeObserver(() => { cancelAnimationFrame(t); t = requestAnimationFrame(() => gambarSatuBingkai(item)); });
+      item._ro.observe(item);
+    }
+  });
+}
+
 /* ---------- Latar titik: titik menjauh dari kursor mouse ---------- */
 const TITIK = { jarak: 22, jari: 1.2, warna: '#9a9a9a', dorong: 38, radius: 130, kecepatan: .14 };
 const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false };
@@ -699,6 +827,7 @@ function render() {
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
   utama.forEach(p => dek.append(kartuUtama(p, (anak[p.id] || []).sort(urut))));
+  gambarBingkai();
 }
 
 /* ================== TIMER MINGGUAN (Senin 00.00 - Minggu 23.59 WIB) ================== */
@@ -719,10 +848,24 @@ function teksTimer(ms) {
 }
 function tickTimer() {
   const el = document.getElementById('timer');
-  if (el) el.textContent = 'Papan ini di-reset seminggu sekali. Sisa waktu tempel catatan minggu ini: ' + teksTimer(sisaPekan(Date.now()));
+  if (el) el.textContent = 'Sisa waktu tempel catatan minggu ini: ' + teksTimer(sisaPekan(Date.now()));
 }
 
 /* ================== MULAI ================== */
+(function temaMulai() {
+  const root = document.documentElement, tb = document.getElementById('btn-tema');
+  let t = null;
+  try { t = localStorage.getItem('deck-tema'); } catch (e) {}
+  if (t !== 'gelap' && t !== 'terang') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'gelap' : 'terang';
+  const pasang = () => {
+    root.dataset.tema = t; tb.textContent = t === 'gelap' ? '☀' : '☾';
+    tb.title = t === 'gelap' ? 'Mode terang' : 'Mode gelap';
+    TITIK.warna = t === 'gelap' ? '#5c5c5c' : '#9a9a9a';
+    dispatchEvent(new Event('resize'));   // gambar ulang latar titik
+  };
+  tb.addEventListener('click', () => { t = t === 'gelap' ? 'terang' : 'gelap'; try { localStorage.setItem('deck-tema', t); } catch (e) {} pasang(); });
+  pasang();
+})();
 (function mulai() {
   const b = document.getElementById('banner');
   if (!siap(CONFIG.SCRIPT_URL) || !siap(CONFIG.GOOGLE_CLIENT_ID) || (!siap(CONFIG.CSV_URL) && !siap(CONFIG.SCRIPT_URL))) {
@@ -732,6 +875,8 @@ function tickTimer() {
   renderAlat(); render(); muat();
   tickTimer(); setInterval(tickTimer, 1000);
   titikMulai();
+  addEventListener('resize', gambarBingkai);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(gambarBingkai);
   bantuanMulai();
   setInterval(() => muat(true), CONFIG.REFRESH_MS);
   initGoogle();
