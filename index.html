@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>deck</title>
+<title>Deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
   :root[data-tema="gelap"] #toast { box-shadow:0 0 0 6px rgba(0,0,0,.85); }
   :root[data-tema="gelap"] .ikon { background:#777; }
   :root[data-tema="gelap"] .ikon:hover, :root[data-tema="gelap"] .ikon.pilih { background:#fff; }
-  :root[data-tema="gelap"] .item.terbuka > .bingkai path { stroke:#9a9a9a; }
+  :root[data-tema="gelap"] .item.terbuka > .bingkai path { fill:#2b2b2b; }
   * { box-sizing: border-box; }
   body { padding-bottom:84px; margin:0; background-color:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
@@ -85,7 +85,8 @@
   .kartu, .balas { font-family:'Shantell Sans','Segoe Print','Bradley Hand',cursive; }
   .item.terbuka { position:relative; margin-top:calc(var(--dy,0px) + 8px); margin-bottom:8px; padding:var(--pad, 16px); }
   .item.terbuka > .bingkai { position:absolute; left:0; top:0; width:1px; height:1px; overflow:visible; pointer-events:none; }
-  .item.terbuka > .bingkai path { fill:none; stroke:#8a8a8a; stroke-width:2; stroke-dasharray:2 2; stroke-linejoin:round; }
+  .item.terbuka > .bingkai { z-index:-1; }
+  .item.terbuka > .bingkai path { fill:#e6e6e6; stroke:none; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .lencana { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; margin-left:6px;
@@ -173,7 +174,7 @@
 
 <header>
   <div class="judul">
-    <h1><b>deck</b> : Tempel tanya, tumpuk jawab, naikkan yang penting.</h1>
+    <h1><b>Deck</b> : Tempel tanya, tumpuk jawab, naikkan yang penting.</h1>
     <div id="timer"></div>
   </div>
   <div id="login"></div>
@@ -759,7 +760,7 @@ function gambarBingkai() {
 }
 
 /* ---------- Latar titik: titik menjauh dari kursor mouse ---------- */
-const TITIK = { jarak: 22, jari: 1.2, warna: '#9a9a9a', dorong: 38, radius: 130, kecepatan: .14 };
+const TITIK = { jarak: 22, jari: 1.2, warna: '#9a9a9a', dorong: 38, radius: 250, kecepatan: .14 };
 const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false };
 function titikUkuran() {
   const k = titik.kanvas, d = window.devicePixelRatio || 1;
@@ -850,7 +851,7 @@ function teksTimer(ms) {
 }
 function tickTimer() {
   const el = document.getElementById('timer');
-  if (el) el.textContent = 'Sisa waktu tempel catatan minggu ini: ' + teksTimer(sisaPekan(Date.now()));
+  if (el) el.textContent = 'Sisa waktu tempel catatan minggu ini adalah ' + teksTimer(sisaPekan(Date.now()));
 }
 
 /* ================== MULAI ================== */
