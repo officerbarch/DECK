@@ -123,6 +123,19 @@
   .kartu.lain .aksi { order:3; justify-content:center; }
   .kartu.lain .btn.garis { font-size:12px; padding:3px 8px; }
 
+  /* titik sambungan antar kartu */
+  .tt { display:inline-block; width:18px; height:18px; border-radius:50%; background:#fff; border:2px solid #222; position:relative; flex-shrink:0; margin-left:2px; opacity:.55; }
+  .tt::before { content:''; position:absolute; inset:-9px; }
+  .tt::after { content:''; position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:#222; }
+  .tt.milik { opacity:1; cursor:crosshair; touch-action:none; }
+  .tt.aktif { background:#222; }
+  .tt.aktif::after { background:#fff; }
+  article.kartu.sasaran { outline:3px dashed #222; outline-offset:5px; }
+  #garis { position:absolute; left:0; top:0; z-index:6; pointer-events:none; overflow:visible; }
+  .terhubung { display:none; flex-wrap:wrap; gap:4px 8px; font-size:12px; margin-top:8px; }
+  .terhubung button { font:inherit; background:none; border:none; border-bottom:1px solid currentColor; padding:0; cursor:pointer; color:inherit; }
+  @media (max-width:640px) { .terhubung { display:flex; } .kartu.lain .terhubung { justify-content:center; order:5; } }
+
   /* tombol */
   .btn { font:inherit; font-size:14px; white-space:nowrap; background:var(--h); color:var(--p); border:2px solid transparent;
          border-radius:0; padding:6px 14px; cursor:pointer; }
@@ -208,6 +221,12 @@ let sayaVote = {};            // { idPost: 1 | -1 }
 let dekBuka = null;           // id post yang tumpukan balasannya sedang terbuka (hanya satu)
 let balasKe = null;           // id balasan yang sedang dibalas (null = membalas post induk)
 let balasTerbuka = null;      // id post yang kartu balasnya sedang terbuka
+let milikSaya = new Set();    // id kartu yang dibuat akun ini (dari server)
+let ovTautan = {};            // sambungan yang baru diubah di sini (menutupi cache CSV sebentar)
+let petaTaut = {}, namaPost = {};
+let seret = null;             // sedang membuat sambungan: { id, mode: 'tarik' | 'pilih', x, y, gerak }
+let sorot = null;             // id kartu yang sedang disorot kursor
+const MAKS_TAUTAN = 5;        // harus sama dengan MAKS_TAUTAN di Kode.gs
 let komposBuka = false;       // kartu penulis baru baru tampil setelah memilih bentuk di atas
 let draft = {};               // isi kartu penulis yang belum terkirim
 let token = sessionStorage.getItem('tok') || '';
@@ -303,12 +322,13 @@ function normal(o) {
   return { id: String(o.id || '').trim(), parent: String(o.parent_id || '').trim(), waktu: o.waktu,
            username: String(o.username || ''), teks: String(o.teks || ''), warna: cekWarna(o.warna), kartu: cekKartu(o.kartu),
            membalas: String(o.membalas || '').slice(0, 40), ke: String(o.ke || '').trim(), bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
-           up: parseInt(o.up) || 0, down: parseInt(o.down) || 0 };
+           up: parseInt(o.up) || 0, down: parseInt(o.down) || 0,
+           tautan: String(o.tautan || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, MAKS_TAUTAN) };
 }
 
 /* ================== MUAT DATA ================== */
 async function muat(otomatis) {
-  if (otomatis && (document.hidden || sedangMengetik())) return;
+  if (otomatis && (document.hidden || sedangMengetik() || (seret && seret.mode === 'tarik'))) return;
   try {
     let daftar = [];
     if (siap(CONFIG.CSV_URL)) {
@@ -335,6 +355,7 @@ function semua() {
   for (const [id, o] of Object.entries(override)) {
     const p = m.get(id); if (p && now - o.t < 360000) { p.up = o.up; p.down = o.down; }
   }
+  for (const [id, o] of Object.entries(ovTautan)) { const p = m.get(id); if (p && now - o.t < 360000) p.tautan = o.a; }
   return [...m.values()];
 }
 const skor = p => p.up - p.down;
@@ -389,12 +410,12 @@ function renderLogin() {
   }
 }
 async function sapa() {
-  try { const j = await panggil({ aksi: 'saya' }); sayaVote = j.votes || {}; toast('Berhasil masuk.'); }
+  try { const j = await panggil({ aksi: 'saya' }); sayaVote = j.votes || {}; milikSaya = new Set(j.milik || []); toast('Berhasil masuk.'); }
   catch (e) { toast(e.message); keluar(true); }
   renderLogin(); render();
 }
 function keluar(diam) {
-  token = ''; sessionStorage.removeItem('tok'); sayaVote = {};
+  token = ''; sessionStorage.removeItem('tok'); sayaVote = {}; milikSaya = new Set(); seret = null;
   renderLogin(); if (!diam) toast('Anda sudah keluar.'); render();
 }
 function butuhLogin() {
@@ -422,7 +443,7 @@ async function kirim(kunci, parent, btn, ke) {
   btn.disabled = true;
   try {
     const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', membalas: ke ? ke.id : '', warna: d.w, kartu: d.k, bentuk: d.b });
-    lokal.push(normal(j.post)); setUser(u);
+    lokal.push(normal(j.post)); milikSaya.add(j.post.id); setUser(u);
     localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); localStorage.setItem('deck_bentuk', d.b);
     delete draft[kunci];
     if (parent) { balasTerbuka = null; balasKe = null; dekBuka = parent; } else komposBuka = false;
@@ -586,8 +607,10 @@ function kartuUtama(p, balasan) {
       else { bukaDek(p.id); balasTerbuka = p.id; balasKe = null; }
       render(); gulirKompos();
     } }, 'Reply'),
+    titikTaut(p),
     n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null);
-  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), bawah);
+  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), bawah, labelTaut(p));
+  kartu.dataset.id = p.id;
   kartu.style.background = `color-mix(in srgb, ${KARTU[p.kartu]} 92%, #000)`;   // lapisan paling depan dalam deck
   const dek = h('div', { class: 'deck' + (n ? ' berbalas' : '') });
   if (n) {
@@ -639,6 +662,7 @@ function isiBantuan() {
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
     ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke deck. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Reply di kartu utama untuk membalas postingan, atau Reply di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
+    ...bagian('Menyambungkan kartu', 'Setiap kartu punya satu titik di kanan tombol Reply. Pembuat kartu bisa menyeret titik itu ke kartu lain (di layar sentuh: ketuk titik, lalu ketuk kartu tujuan) untuk menarik garis penghubung. Satu kartu maksimal 5 koneksi. Ulangi pada kartu yang sama untuk menghapus garis. Di HP, sambungan tampil sebagai label "↔ @nama" yang bisa diketuk.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
     ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
     ...bagian('Reset mingguan', 'Papan di-reset seminggu sekali. Hitung mundur di bawah judul menunjukkan sisa waktu tempel catatan minggu ini.'),
@@ -822,6 +846,135 @@ function titikMulai() {
   addEventListener('resize', () => { titikUkuran(); titikMinta(); });
   addEventListener('scroll', titikMinta, { passive: true });
 }
+/* ---------- Sambungan antar kartu ---------- */
+let garisData = [];   // [[idAsal, idTujuan], ...]
+function titikTaut(p) {
+  const milik = milikSaya.has(p.id);
+  const t = h('span', { class: 'tt' + (milik ? ' milik' : '') + (seret && seret.id === p.id ? ' aktif' : ''), 'data-id': p.id,
+    title: milik ? 'Seret ke kartu lain untuk menyambung (maks ' + MAKS_TAUTAN + ')' : 'Titik sambungan' });
+  t.addEventListener('click', e => { e.stopPropagation(); if (!milik && !seret) toast('Hanya pembuat kartu yang bisa menyambungkannya.'); });
+  return t;
+}
+function labelTaut(p) {
+  const ids = [...(petaTaut[p.id] || [])];
+  if (!ids.length) return null;
+  return h('div', { class: 'terhubung', onclick: e => e.stopPropagation() }, '↔',
+    ids.map(id => h('button', { type: 'button', onclick: () => {
+      const el = document.querySelector('article.kartu[data-id="' + id + '"]');
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } }, '@' + (namaPost[id] || ''))));
+}
+const kartuDi = (x, y) => { const e = document.elementFromPoint(x, y); return e && e.closest ? e.closest('article.kartu[data-id]') : null; };
+async function sambung(id, ke) {
+  seret = null; gambarGaris();
+  if (!butuhLogin()) return;
+  try {
+    const j = await panggil({ aksi: 'tautan', id, ke });
+    ovTautan[id] = { a: (j.tautan || []).slice(0, MAKS_TAUTAN), t: Date.now() };
+    toast((j.tautan || []).includes(ke) ? 'Tersambung ✓' : 'Sambungan dihapus.');
+  } catch (e) { toast(e.message); }
+  render();
+}
+function titikPusat(el) { const r = el.getBoundingClientRect(); return { x: r.left + scrollX + r.width / 2, y: r.top + scrollY + r.height / 2 }; }
+function titikTepi(kartu, dari) {   // titik di tepi kartu tujuan yang menghadap asal garis
+  const r = kartu.getBoundingClientRect(), w = r.width, hh = r.height;
+  const cx = r.left + scrollX + w / 2, cy = r.top + scrollY + hh / 2, dx = dari.x - cx, dy = dari.y - cy;
+  let k;
+  if (kartu.classList.contains('b-lingkaran')) k = 1 / Math.hypot(dx / (w / 2), dy / (hh / 2));
+  else k = Math.min((w / 2) / Math.abs(dx || 1e-6), (hh / 2) / Math.abs(dy || 1e-6)) * (/b-(enam|lima|ledak)/.test(kartu.className) ? .86 : .98);
+  return { x: cx + dx * k, y: cy + dy * k };
+}
+function gambarGaris() {
+  let svg = document.getElementById('garis');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'garis'; svg.setAttribute('aria-hidden', 'true'); document.body.append(svg);
+  }
+  const de = document.documentElement;
+  svg.setAttribute('width', de.scrollWidth); svg.setAttribute('height', de.scrollHeight);
+  svg.replaceChildren();
+  const hp = matchMedia('(max-width:640px)').matches;
+  if (hp) return;   // di HP sambungan ditampilkan sebagai label "↔ @nama" di kartu
+  const gelap = de.dataset.tema === 'gelap', tinta = gelap ? '#fff' : '#222', halo = gelap ? '#000' : '#fff';
+  const NS = 'http://www.w3.org/2000/svg';
+  const buat = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); svg.append(e); return e; };
+  const lengkung = (p, q) => {
+    const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2, dx = q.x - p.x, dy = q.y - p.y, len = Math.hypot(dx, dy) || 1, bend = len * .16;
+    return `M${p.x.toFixed(1)} ${p.y.toFixed(1)} Q${(mx - dy / len * bend).toFixed(1)} ${(my + dx / len * bend).toFixed(1)} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`;
+  };
+  garisData.forEach(([a, b]) => {
+    const ka = document.querySelector('article.kartu[data-id="' + a + '"]'), kb = document.querySelector('article.kartu[data-id="' + b + '"]');
+    const ta = ka && ka.querySelector('.tt'); if (!ta || !kb) return;
+    const p = titikPusat(ta), q = titikTepi(kb, p);
+    const hidup = sorot === a || sorot === b, redup = sorot && !hidup;
+    const d = lengkung(p, q), lebar = hidup ? 3.6 : 2.2, op = redup ? .22 : 1;
+    buat('path', { d, fill: 'none', stroke: halo, 'stroke-width': lebar + 3, 'stroke-linecap': 'round', opacity: op * .85 });
+    buat('path', { d, fill: 'none', stroke: tinta, 'stroke-width': lebar, 'stroke-linecap': 'round', opacity: op });
+    buat('circle', { cx: q.x, cy: q.y, r: lebar + 2.6, fill: halo, opacity: op });
+    buat('circle', { cx: q.x, cy: q.y, r: lebar + .8, fill: tinta, opacity: op });
+  });
+  if (seret && seret.mode === 'tarik' && seret.gerak) {   // garis sementara saat menyeret
+    const ka = document.querySelector('article.kartu[data-id="' + seret.id + '"] .tt');
+    if (ka) {
+      const p = titikPusat(ka), q = { x: seret.x + scrollX, y: seret.y + scrollY };
+      buat('path', { d: `M${p.x} ${p.y} L${q.x} ${q.y}`, fill: 'none', stroke: halo, 'stroke-width': 5.2, 'stroke-linecap': 'round', opacity: .85 });
+      buat('path', { d: `M${p.x} ${p.y} L${q.x} ${q.y}`, fill: 'none', stroke: tinta, 'stroke-width': 2.2, 'stroke-dasharray': '6 6', 'stroke-linecap': 'round' });
+    }
+  }
+}
+function tandaiSasaran(kartu) {
+  document.querySelectorAll('article.kartu.sasaran').forEach(e => { if (e !== kartu) e.classList.remove('sasaran'); });
+  if (kartu) kartu.classList.add('sasaran');
+}
+function tautMulai() {
+  document.addEventListener('pointerdown', e => {
+    const t = e.target.closest && e.target.closest('.tt.milik'); if (!t) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!butuhLogin()) return;
+    const id = t.dataset.id;
+    if (seret && seret.mode === 'pilih' && seret.id === id) { seret = null; render(); return; }   // ketuk lagi = batal
+    seret = { id, mode: 'tarik', x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, gerak: false };
+    t.classList.add('aktif');
+  }, true);
+  document.addEventListener('pointermove', e => {
+    if (!seret || seret.mode !== 'tarik') return;
+    seret.x = e.clientX; seret.y = e.clientY;
+    if (!seret.gerak && Math.hypot(seret.x - seret.sx, seret.y - seret.sy) > 8) seret.gerak = true;
+    if (seret.gerak) {
+      const k = kartuDi(e.clientX, e.clientY);
+      tandaiSasaran(k && k.dataset.id !== seret.id ? k : null);
+      gambarGaris();
+    }
+  });
+  document.addEventListener('pointerup', e => {
+    if (!seret || seret.mode !== 'tarik') return;
+    const s = seret;
+    tandaiSasaran(null);
+    if (s.gerak) {
+      const k = kartuDi(e.clientX, e.clientY);
+      if (k && k.dataset.id !== s.id) sambung(s.id, k.dataset.id); else { seret = null; render(); }
+    } else {   // hanya ketuk: masuk mode pilih, lalu ketuk kartu tujuan
+      s.mode = 'pilih'; render();
+      toast('Ketuk kartu tujuan (Esc untuk batal).');
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!seret || seret.mode !== 'pilih') return;
+    if (e.target.closest && e.target.closest('.tt')) return;   // klik yang menyertai ketukan pada titik
+    e.stopPropagation(); e.preventDefault();
+    const k = e.target.closest && e.target.closest('article.kartu[data-id]');
+    if (k && k.dataset.id !== seret.id) sambung(seret.id, k.dataset.id); else { seret = null; render(); }
+  }, true);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && seret) { seret = null; tandaiSasaran(null); render(); } });
+  // sorot garis milik kartu yang sedang ditunjuk kursor
+  document.addEventListener('mouseover', e => {
+    const k = e.target.closest && e.target.closest('article.kartu[data-id]'); const id = k ? k.dataset.id : null;
+    if (id !== sorot) { sorot = id; if (garisData.length) gambarGaris(); }
+  });
+  addEventListener('resize', gambarGaris);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(gambarGaris);
+  if (window.ResizeObserver) new ResizeObserver(() => gambarGaris()).observe(document.getElementById('dek'));
+}
 function render() {
   const dek = document.getElementById('dek'); dek.innerHTML = '';
   if (komposBuka) dek.append(h('div', { class: 'item' }, kompos('baru', '')));
@@ -829,8 +982,17 @@ function render() {
   const utama = all.filter(p => !p.parent).sort(urut);
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
+  petaTaut = {}; namaPost = {};
+  utama.forEach(p => { namaPost[p.id] = p.username; });
+  utama.forEach(p => p.tautan.forEach(t => {
+    if (!namaPost[t]) return;
+    (petaTaut[p.id] = petaTaut[p.id] || new Set()).add(t);
+    (petaTaut[t] = petaTaut[t] || new Set()).add(p.id);
+  }));
+  garisData = utama.flatMap(p => p.tautan.filter(t => namaPost[t]).map(t => [p.id, t]));
   utama.forEach(p => dek.append(kartuUtama(p, (anak[p.id] || []).sort(urut))));
   gambarBingkai();
+  gambarGaris();
 }
 
 /* ================== TIMER MINGGUAN (Senin 00.00 - Minggu 23.59 WIB) ================== */
@@ -877,7 +1039,7 @@ function tickTimer() {
   if (!tokenHidup()) { token = ''; sessionStorage.removeItem('tok'); }
   renderAlat(); render(); muat();
   tickTimer(); setInterval(tickTimer, 1000);
-  titikMulai();
+  titikMulai(); tautMulai();
   addEventListener('resize', gambarBingkai);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(gambarBingkai);
   bantuanMulai();
