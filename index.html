@@ -394,7 +394,7 @@ function renderAlat() {
       title: `${BENTUK[b].label} · maks ${BENTUK[b].maks} huruf`, 'aria-label': BENTUK[b].label,
       onclick: () => pilihBentukBaru(b)
     })),
-    aktif ? h('span', { class: 'petunjuk' }, `${BENTUK[aktif].label} · maks ${BENTUK[aktif].maks} huruf`) : null
+    aktif ? h('span', { class: 'petunjuk' }, `${BENTUK[aktif].label} · maks ${BENTUK[aktif].maks} huruf`) : []
   );
 }
 
