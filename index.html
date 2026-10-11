@@ -574,6 +574,15 @@ function bunyiDekdek() {
     o1.start(t); o2.start(t); o1.stop(t + SUARA.panjang + .02); o2.stop(t + SUARA.panjang + .02);
   });
 }
+// satu nada rendah pendek untuk klik objek (kartu, tombol, menu)
+function bunyiKlik() {
+  if (!suaraKead.hidup) return;
+  const c = suaraKead.ctx; if (!c || c.state !== 'running') return;
+  const t = c.currentTime + .005, g = c.createGain(), o = c.createOscillator();
+  o.type = 'sine'; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(200, t + .09);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(.3, t + .003); g.gain.exponentialRampToValueAtTime(0.0001, t + .09);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .1);
+}
 (function suaraMulai() {
   const tb = document.getElementById('btn-suara');
   try { if (localStorage.getItem('deck-suara') === '0') suaraKead.hidup = false; } catch (e) {}
@@ -582,6 +591,10 @@ function bunyiDekdek() {
     tb.title = 'Suara kartu baru: ' + (suaraKead.hidup ? 'menyala' : 'mati');
   };
   const buka = () => { suaraSiap(); };
+  document.addEventListener('click', e => {
+    const x = e.target.closest && e.target.closest('button, a, select, summary, [role="menuitem"], article.kartu, .balas, .tt');
+    if (x && !x.closest('#btn-suara') && !x.disabled) bunyiKlik();
+  }, true);
   addEventListener('pointerdown', buka, { passive: true }); addEventListener('keydown', buka);
   tb.addEventListener('click', () => {
     suaraKead.hidup = !suaraKead.hidup; try { localStorage.setItem('deck-suara', suaraKead.hidup ? '1' : '0'); } catch (e) {}
@@ -800,7 +813,7 @@ function isiBantuan() {
     h('h2', {}, 'Cara memakai DekDek'),
     h('p', {}, 'DekDek adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
-    ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
+    ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim, serta satu nada rendah pendek saat kamu mengklik kartu atau tombol. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
     ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
     ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke DekDek. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
