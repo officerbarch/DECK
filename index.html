@@ -90,6 +90,7 @@
   #menu-tema button { font:inherit; font-size:16px; line-height:1; min-width:36px; padding:6px 8px; background:var(--p); color:var(--h); border:2px solid transparent; cursor:pointer; }
   #menu-tema button:hover { border-color:var(--h); }
   #menu-tema button.aktif { background:var(--h); color:var(--p); }
+  html[data-latar="mati"] #titik { display:none; }
   /* monokrom: hanya hitam dan putih, kontras penuh */
   :root[data-mono="1"] .dek .teks { color:inherit !important; }
   :root[data-mono="1"] .dek .btn.garis { border-color:var(--h); }
@@ -153,7 +154,7 @@
 
   .dek { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:30px 26px;
          align-items:start; margin:0; padding:14px 24px 40px; zoom:var(--z,1); }
-  @media (min-width:641px) { .dek:not(.rapi) { min-width:calc(10 * 310px + 9 * 26px + 48px); } }   /* mode Acak: minimal 10 kolom, geser ke samping; layar lebar menambah kolom otomatis */
+  @media (min-width:641px) { .dek:not(.rapi) { min-width:calc(10 * 310px + 9 * 26px + 48px); grid-template-columns:repeat(auto-fit, 310px); justify-content:center; } }   /* mode Acak: minimal 10 kolom, geser ke samping; layar lebar menambah kolom otomatis */
 
   /* kartu */
   .kartu { background:var(--kuning); border:none; padding:16px 18px; }
@@ -1209,7 +1210,7 @@ function titikKunci(el) { return el.dataset.id ? 'k' + el.dataset.id : el.datase
 function titikRect(el, sx, sy) { const r = el.getBoundingClientRect(); return { l: r.left + sx, t: r.top + sy, r: r.right + sx, b: r.bottom + sy, ata: r.bottom < -150 || r.top > innerHeight + 150 }; }
 // dipanggil sebelum render() membangun ulang kartu: simpan posisi lama supaya lompatan tata letak juga terbaca
 function titikFoto() {
-  if (titik.kurang) return;
+  if (titik.kurang || titik.mati) return;
   titik.foto = new Map();
   document.querySelectorAll('.kartu:not(.lapis), .balas').forEach(el => { const k = titikKunci(el); if (k) titik.foto.set(k, titikRect(el, scrollX, scrollY)); });
 }
@@ -1239,6 +1240,7 @@ function titikPelacak(now) {
   titik.act = aktif;
 }
 function titikGambar(now) {
+  if (titik.mati) { titik.jalan = false; return; }
   const c = titik.ctx, J = TITIK.jarak, H = TITIK.tinggi, S = TITIK.sayap;
   // kecepatan gerak tidak bergantung pada frame rate
   const dt = Math.max(8, Math.min(50, now - (titik.t0 || now - 16.7))); titik.t0 = now;
@@ -1280,7 +1282,7 @@ function titikGambar(now) {
   titik.jalan = bergerak;
   if (bergerak) requestAnimationFrame(titikGambar);
 }
-function titikMinta() { if (!titik.jalan) { titik.jalan = true; titik.t0 = 0; requestAnimationFrame(titikGambar); } }
+function titikMinta() { if (titik.mati) return; if (!titik.jalan) { titik.jalan = true; titik.t0 = 0; requestAnimationFrame(titikGambar); } }
 function titikMulai() {
   titik.kanvas = document.getElementById('titik');
   titik.kurang = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1517,7 +1519,7 @@ function petaMulai() {
   const kotakPeta = document.getElementById('peta'), tb = document.getElementById('peta-judul');
   const kv = document.getElementById('peta-kanvas'), cv = kv.querySelector('canvas'), kt = document.getElementById('peta-kotak');
   const LEBAR = 190, MAKS_T = 0.4;
-  let skala = 1, ttl = 0, zoom = 1;
+  let skala = 1, ttl = 0, zoom = 1, sudahTengah = false;
   try { if (localStorage.getItem('deck-peta') === '0') kotakPeta.classList.add('tutup'); } catch (e) {}
   const lipat = () => tb.setAttribute('aria-expanded', kotakPeta.classList.contains('tutup') ? 'false' : 'true');
   lipat();
@@ -1566,12 +1568,15 @@ function petaMulai() {
   const hd = document.querySelector('header');
   const ukurH = () => root.style.setProperty('--hh', hd.offsetHeight + 'px');
   ukurH(); if (window.ResizeObserver) new ResizeObserver(ukurH).observe(hd); else addEventListener('resize', ukurH);
+  function petaTengah() { scrollTo(Math.max(0, (dokW() - innerWidth) / 2), scrollY); }
+  window.petaTengah = petaTengah;
   const dokW = () => Math.max(document.documentElement.scrollWidth, innerWidth);
   const dokH = () => Math.max(document.documentElement.scrollHeight, innerHeight);
   function gambar() {
     const dek = document.getElementById('dek');
     const perlu = dokH() > innerHeight + 4 || dokW() > innerWidth + 4 || zoom !== 1;
     const ada = dek && dek.querySelector('.item, .kartu');
+    if (ada && !sudahTengah) { sudahTengah = true; if (scrollX === 0) petaTengah(); }
     kotakPeta.hidden = !(perlu && ada);
     if (kotakPeta.hidden || kotakPeta.classList.contains('tutup')) return;
     const W = dokW(), H = dokH();
@@ -1630,6 +1635,19 @@ function petaMulai() {
     b.addEventListener('click', () => { t = k; try { localStorage.setItem('deck-tema', t); } catch (e) {} pasang(); tutup(); });
     menu.appendChild(b); return b;
   });
+  // tombol ✕: matikan / nyalakan latar tanda ^ (terpisah dari pilihan tema)
+  const bx = document.createElement('button'); bx.type = 'button'; bx.textContent = '⊘'; bx.setAttribute('role', 'menuitemcheckbox'); menu.appendChild(bx);
+  const latar = mati => {
+    titik.mati = mati;
+    if (mati) root.dataset.latar = 'mati'; else delete root.dataset.latar;
+    bx.classList.toggle('aktif', mati); bx.setAttribute('aria-checked', mati ? 'true' : 'false');
+    const nm = mati ? 'Nyalakan latar' : 'Matikan latar'; bx.title = nm; bx.setAttribute('aria-label', nm);
+    if (!mati && titik.ctx) titikMinta();
+  };
+  let mati = false;
+  try { mati = localStorage.getItem('deck-latar') === 'mati'; } catch (e) {}
+  latar(mati);
+  bx.addEventListener('click', () => { mati = !mati; try { localStorage.setItem('deck-latar', mati ? 'mati' : 'hidup'); } catch (e) {} latar(mati); tutup(); });
   const tutup = () => { menu.hidden = true; tb.setAttribute('aria-expanded', 'false'); };
   const pasang = () => {
     const gelap = t === 'gelap' || t === 'mono-gelap', mono = t.indexOf('mono') === 0;
@@ -1662,6 +1680,7 @@ function petaMulai() {
   tb.addEventListener('click', () => {
     rapi = !rapi; try { localStorage.setItem('deck-rapi', rapi ? '1' : '0'); } catch (e) {}
     pasang(); bunyiSebar(rapi); render();
+    if (!rapi && window.petaTengah) requestAnimationFrame(petaTengah);   // kembali ke Acak: mulai dari tengah kanvas
   });
   pasang();
 })();
