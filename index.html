@@ -93,6 +93,31 @@
   :root[data-mono="1"][data-tema="gelap"] .dek .balas { --h:#fff; --p:#000; --abu:#ccc; background:#000 !important; color:#fff; box-shadow:inset 0 0 0 1px #fff; }
   :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu { background:#000 !important; box-shadow:inset 0 0 0 1px #fff; }
   :root[data-mono="1"][data-tema="gelap"] .item.terbuka > .bingkai path { fill:#333; }
+  /* bentuk bersudut (clip-path): garis tepi 1px digambar dengan lapisan yang dipotong sama */
+  :root[data-mono="1"][data-tema="terang"] .dek .balas.kartu.b-enam { background:#000 !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="terang"] .dek .balas.kartu.b-enam::before { content:""; position:absolute; inset:1px; z-index:-1; background:#fff; clip-path:var(--c-enam); }
+  :root[data-mono="1"][data-tema="terang"] .dek .lapis.kartu.b-enam { background:#000 !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="terang"] .dek .lapis.kartu.b-enam::before { content:""; position:absolute; inset:1px; z-index:-1; background:#fff; clip-path:var(--c-enam); }
+  :root[data-mono="1"][data-tema="terang"] .dek .balas.kartu.b-lima { background:#000 !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="terang"] .dek .balas.kartu.b-lima::before { content:""; position:absolute; inset:1px; z-index:-1; background:#fff; clip-path:var(--c-lima); }
+  :root[data-mono="1"][data-tema="terang"] .dek .lapis.kartu.b-lima { background:#000 !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="terang"] .dek .lapis.kartu.b-lima::before { content:""; position:absolute; inset:1px; z-index:-1; background:#fff; clip-path:var(--c-lima); }
+  :root[data-mono="1"][data-tema="terang"] .dek .balas.kartu.b-ledak { background:#000 !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="terang"] .dek .balas.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#fff; clip-path:var(--c-ledak); }
+  :root[data-mono="1"][data-tema="terang"] .dek .lapis.kartu.b-ledak { background:#000 !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="terang"] .dek .lapis.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#fff; clip-path:var(--c-ledak); }
+  :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-enam { background:#fff !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-enam::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-enam); }
+  :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-enam { background:#fff !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-enam::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-enam); }
+  :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-lima { background:#fff !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-lima::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-lima); }
+  :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-lima { background:#fff !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-lima::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-lima); }
+  :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-ledak { background:#fff !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-ledak); }
+  :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-ledak { background:#fff !important; box-shadow:none; isolation:isolate; }
+  :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-ledak); }
   #btn-tema, #btn-help { border:2px solid var(--h); padding:4px 10px; font-size:14px; min-width:34px; }
   .petunjuk { color:var(--h); background:#fff; padding:4px 10px; }
   #titik { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
