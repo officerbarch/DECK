@@ -99,4 +99,4 @@ Konstanta bentuk, warna, dan batas di `Kode.gs` (`BENTUK`, `KARTU`, `WARNA`, `MA
 
 ## Lisensi
 
-Belum ditentukan. Tambahkan berkas `LICENSE` bila ingin membagikannya.
+Belum ditentukan.
