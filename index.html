@@ -28,7 +28,8 @@
   * { box-sizing: border-box; }
   body { padding-bottom:84px; margin:0; background-color:var(--p); color:var(--h); font-family:Arial, Helvetica, sans-serif; line-height:1.35; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
-           margin:0; padding:22px 16px 10px; }   /* judul rapat kiri layar, kontrol rapat kanan layar */
+           margin:0; padding:22px 16px 10px;
+           position:sticky; top:0; z-index:30; background:var(--p); }   /* tetap di atas saat digulir */   /* judul rapat kiri layar, kontrol rapat kanan layar */
   h1 { margin:0; font-size:clamp(11px, 2.9vw, 26px); font-weight:400; white-space:nowrap; }
   h1 b { font-weight:700; }
   @media (max-width:640px) {
