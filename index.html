@@ -649,14 +649,14 @@ function ketuk(c, t, f, vol) {
 function bunyiSebar(berkumpul) {
   if (!suaraKead.hidup) return;
   const c = suaraKead.ctx; if (!c || c.state !== 'running') return;
-  const t = c.currentTime + .01, T = .34;
+  const t = c.currentTime + .01, T = .34, K = .4;   // K: pengali volume (makin kecil makin pelan)
   if (!berkumpul) {   // menyebar
-    desir(c, t, T, 400, 2600, .22);
-    for (let i = 0; i < 9; i++) ketuk(c, t + Math.pow(Math.random(), .8) * T, 900 + Math.random() * 2200, .5 - i * .03);
+    desir(c, t, T, 400, 2600, .22 * K);
+    for (let i = 0; i < 9; i++) ketuk(c, t + Math.pow(Math.random(), .8) * T, 900 + Math.random() * 2200, (.5 - i * .03) * K);
   } else {            // berkumpul
-    desir(c, t, T, 2400, 380, .2);
-    for (let i = 0; i < 7; i++) ketuk(c, t + T * (1 - Math.pow(1 - i / 6, 1.6)) * .95, 700 + Math.random() * 1200, .35 + i * .04);
-    nadaTunggal(c, t + T, 130, 90, .12, .32);
+    desir(c, t, T, 2400, 380, .2 * K);
+    for (let i = 0; i < 7; i++) ketuk(c, t + T * (1 - Math.pow(1 - i / 6, 1.6)) * .95, 700 + Math.random() * 1200, (.35 + i * .04) * K);
+    nadaTunggal(c, t + T, 130, 90, .12, .32 * K);
   }
 }
 (function suaraMulai() {
