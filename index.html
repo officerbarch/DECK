@@ -263,6 +263,54 @@
            z-index:100; pointer-events:none; box-shadow:0 0 0 6px rgba(255,255,255,.85); }
   #banner { max-width:1200px; margin:0 auto; padding:0 24px; font-size:14px; }
   #banner div { border:2px dashed var(--h); padding:10px 14px; margin:8px 0; }
+
+  /* ===== gaya tombol ala "Sign in with Google": sudut 4px, garis tepi 1px abu ===== */
+  header .kanan .btn, header .kanan select, header #btn-akun, header #btn-tema, header #btn-help, header #btn-suara, header #btn-foto, header #btn-rapi, header #urut {
+    height:40px; box-sizing:border-box; border:1px solid #dadce0 !important; border-radius:4px !important; background:#fff !important; color:#3c4043 !important;
+    font:500 14px/1 "Google Sans", Roboto, Arial, sans-serif !important; letter-spacing:.2px; padding:0 14px !important; min-width:40px !important;
+    display:inline-flex; align-items:center; justify-content:center; text-decoration:none; transition:background .15s, box-shadow .15s; }
+  header .kanan select, header #urut { padding:0 10px !important; }
+  header .kanan .btn:hover:not(:disabled), header .kanan select:hover { background:#f8f9fa !important; box-shadow:0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); }
+  header #btn-akun { max-width:160px; display:inline-block; line-height:38px; }
+  header #btn-suara.mati { opacity:.55; }
+  header .kanan { gap:8px; }
+  #login { min-height:40px; }
+  #menu-tema, #menu-akun { border:1px solid #dadce0 !important; border-radius:4px; background:#fff !important; box-shadow:0 2px 6px rgba(60,64,67,.3); }
+  #menu-tema button, #menu-akun button { background:#fff !important; color:#3c4043 !important; border:1px solid transparent !important; border-radius:4px; font-family:"Google Sans", Roboto, Arial, sans-serif; }
+  #menu-tema button:hover, #menu-akun button:hover { background:#f1f3f4 !important; border-color:transparent !important; }
+  #menu-tema button.aktif { background:#e8f0fe !important; color:#1a73e8 !important; }
+  :root[data-tema="gelap"] header .kanan .btn, :root[data-tema="gelap"] header .kanan select, :root[data-tema="gelap"] header #urut { background:#131314 !important; border-color:#5f6368 !important; color:#e3e3e3 !important; }
+  :root[data-tema="gelap"] header .kanan .btn:hover:not(:disabled), :root[data-tema="gelap"] header .kanan select:hover { background:#1f1f1f !important; box-shadow:none; }
+  :root[data-tema="gelap"] #menu-tema, :root[data-tema="gelap"] #menu-akun { background:#131314 !important; border-color:#5f6368 !important; }
+  :root[data-tema="gelap"] #menu-tema button, :root[data-tema="gelap"] #menu-akun button { background:#131314 !important; color:#e3e3e3 !important; }
+  :root[data-tema="gelap"] #menu-tema button:hover, :root[data-tema="gelap"] #menu-akun button:hover { background:#1f1f1f !important; }
+  :root[data-tema="gelap"] #menu-tema button.aktif { background:#1f3a5f !important; color:#8ab4f8 !important; }
+
+  :root[data-tema="gelap"] header .kanan .btn, :root[data-tema="gelap"] header .kanan select, :root[data-tema="gelap"] header #btn-akun, :root[data-tema="gelap"] header #btn-tema, :root[data-tema="gelap"] header #btn-help, :root[data-tema="gelap"] header #btn-suara, :root[data-tema="gelap"] header #btn-foto, :root[data-tema="gelap"] header #btn-rapi, :root[data-tema="gelap"] header #urut { background:#131314 !important; border-color:#5f6368 !important; color:#e3e3e3 !important; }
+  :root[data-tema="gelap"] header .kanan .btn:hover:not(:disabled), :root[data-tema="gelap"] header .kanan select:hover:not(:disabled), :root[data-tema="gelap"] header #btn-akun:hover:not(:disabled), :root[data-tema="gelap"] header #btn-tema:hover:not(:disabled), :root[data-tema="gelap"] header #btn-help:hover:not(:disabled), :root[data-tema="gelap"] header #btn-suara:hover:not(:disabled), :root[data-tema="gelap"] header #btn-foto:hover:not(:disabled), :root[data-tema="gelap"] header #btn-rapi:hover:not(:disabled), :root[data-tema="gelap"] header #urut:hover:not(:disabled) { background:#1f1f1f !important; box-shadow:none; }
+  :root[data-mono="1"][data-tema="terang"] header .kanan .btn, :root[data-mono="1"][data-tema="terang"] header .kanan select, :root[data-mono="1"][data-tema="terang"] header #btn-akun, :root[data-mono="1"][data-tema="terang"] header #btn-tema, :root[data-mono="1"][data-tema="terang"] header #btn-help, :root[data-mono="1"][data-tema="terang"] header #btn-suara, :root[data-mono="1"][data-tema="terang"] header #btn-foto, :root[data-mono="1"][data-tema="terang"] header #btn-rapi, :root[data-mono="1"][data-tema="terang"] header #urut { border-color:#000 !important; color:#000 !important; background:#fff !important; }
+  :root[data-mono="1"][data-tema="gelap"] header .kanan .btn, :root[data-mono="1"][data-tema="gelap"] header .kanan select, :root[data-mono="1"][data-tema="gelap"] header #btn-akun, :root[data-mono="1"][data-tema="gelap"] header #btn-tema, :root[data-mono="1"][data-tema="gelap"] header #btn-help, :root[data-mono="1"][data-tema="gelap"] header #btn-suara, :root[data-mono="1"][data-tema="gelap"] header #btn-foto, :root[data-mono="1"][data-tema="gelap"] header #btn-rapi, :root[data-mono="1"][data-tema="gelap"] header #urut { border-color:#fff !important; color:#fff !important; background:#000 !important; }
+  /* kotak Statistik */
+  #statistik { background:#fff; color:#3c4043; border:1px solid #dadce0; border-radius:4px; overflow:hidden; box-shadow:0 1px 3px rgba(60,64,67,.3); font-family:"Google Sans", Roboto, Arial, sans-serif; }
+  #stat-judul { background:transparent; color:#3c4043; font-weight:500; padding:10px 12px; }
+  #statistik:not(.tutup) #stat-judul { border-bottom:1px solid #dadce0; }
+  #stat-judul:hover { background:#f8f9fa; }
+  #stat-isi .nama-s { color:#5f6368; }
+  :root[data-tema="gelap"] #statistik { background:#131314; color:#e3e3e3; border-color:#5f6368; }
+  :root[data-tema="gelap"] #stat-judul { color:#e3e3e3; }
+  :root[data-tema="gelap"] #statistik:not(.tutup) #stat-judul { border-bottom-color:#5f6368; }
+  :root[data-tema="gelap"] #stat-judul:hover { background:#1f1f1f; }
+  :root[data-tema="gelap"] #stat-isi .nama-s { color:#9aa0a6; }
+  /* menu Petunjuk */
+  #bantuan .lembar { border:1px solid #dadce0; border-radius:4px; transform:none; box-shadow:0 4px 16px rgba(60,64,67,.3); }
+  #bantuan .tutup-bantuan { height:36px; box-sizing:border-box; padding:0 18px; background:#fff !important; color:#3c4043 !important; border:1px solid #dadce0 !important; border-radius:4px; font:500 14px/1 "Google Sans", Roboto, Arial, sans-serif; }
+  #bantuan .tutup-bantuan:hover { background:#f8f9fa !important; }
+  /* monokrom tetap hitam putih tegas, hanya sudutnya membulat dan garis tepinya 1px */
+  :root[data-mono="1"][data-tema="terang"] header .kanan .btn, :root[data-mono="1"][data-tema="terang"] header .kanan select, :root[data-mono="1"][data-tema="terang"] header #urut,
+  :root[data-mono="1"][data-tema="terang"] #menu-tema, :root[data-mono="1"][data-tema="terang"] #menu-akun, :root[data-mono="1"][data-tema="terang"] #statistik { border-color:#000 !important; color:#000 !important; }
+  :root[data-mono="1"][data-tema="gelap"] header .kanan .btn, :root[data-mono="1"][data-tema="gelap"] header .kanan select, :root[data-mono="1"][data-tema="gelap"] header #urut,
+  :root[data-mono="1"][data-tema="gelap"] #menu-tema, :root[data-mono="1"][data-tema="gelap"] #menu-akun, :root[data-mono="1"][data-tema="gelap"] #statistik { border-color:#fff !important; color:#fff !important; }
+  @media (max-width:640px) { header .kanan .btn, header .kanan select, header #btn-akun, header #btn-tema, header #btn-help, header #btn-suara, header #btn-foto, header #btn-rapi, header #urut { height:34px; font-size:12px !important; padding:0 8px !important; min-width:34px !important; } header #btn-akun { line-height:32px; } header .kanan { gap:5px; } }
 </style>
 </head>
 <body>
