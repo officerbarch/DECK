@@ -127,6 +127,11 @@
   :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-ledak); }
   :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-ledak { background:#fff !important; box-shadow:none; isolation:isolate; }
   :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-ledak); }
+  #btn-foto { border:2px solid var(--h); padding:4px 10px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; }
+  html.foto header, html.foto #alat, html.foto #statistik, html.foto footer, html.foto #titik, html.foto #banner, html.foto #toast { visibility:hidden !important; }
+  html.foto { background:#fff !important; }
+  html.foto body { background:transparent !important; }
+  html.foto .dek.rapi { zoom:1 !important; }
   #btn-suara { border:2px solid var(--h); padding:4px 10px; font-size:14px; min-width:34px; }
   #btn-suara.mati { opacity:.55; text-decoration:line-through; }
   #btn-tema, #btn-help { border:2px solid var(--h); padding:4px 10px; font-size:14px; min-width:34px; }
@@ -267,7 +272,7 @@
   <div class="judul">
     <h1><b>Dekken</b> : Tumpuk, balas, dan naikkan! <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
   </div>
-  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><span id="tema-wrap"><button type="button" id="btn-tema" class="btn garis" aria-haspopup="true" aria-expanded="false" aria-label="Pilih tampilan"></button><div id="menu-tema" role="menu" hidden></div></span><button type="button" id="btn-suara" class="btn garis" aria-pressed="true" aria-label="Suara kartu baru" title="Suara kartu baru: menyala">♪</button><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
+  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><span id="tema-wrap"><button type="button" id="btn-tema" class="btn garis" aria-haspopup="true" aria-expanded="false" aria-label="Pilih tampilan"></button><div id="menu-tema" role="menu" hidden></div></span><button type="button" id="btn-suara" class="btn garis" aria-pressed="true" aria-label="Suara kartu baru" title="Suara kartu baru: menyala">♪</button><button type="button" id="btn-foto" class="btn garis" aria-label="Salin foto semua kartu" title="Salin foto semua kartu ke clipboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
 </header>
 <aside id="statistik"><button type="button" id="stat-judul" aria-expanded="true"><span>Statistik</span><span id="stat-panah">▾</span></button><div id="stat-isi"></div></aside>
 <nav id="alat"><div id="bentuk-baris"></div></nav>
@@ -301,7 +306,7 @@ let balasKe = null;           // id balasan yang sedang dibalas (null = membalas
 let balasTerbuka = null;      // id post yang kartu balasnya sedang terbuka
 let milikSaya = new Set();    // id kartu yang dibuat akun ini (dari server)
 let ovTautan = {};            // sambungan yang baru diubah di sini (menutupi cache CSV sebentar)
-let petaTaut = {}, namaPost = {};
+let petaTaut = {}, namaPost = {}, warnaPost = {};
 let seret = null;             // sedang membuat sambungan: { id, mode: 'tarik' | 'pilih', x, y, gerak }
 let sorot = null;             // id kartu yang sedang disorot kursor
 const MAKS_TAUTAN = 5;        // harus sama dengan MAKS_TAUTAN di Kode.gs
@@ -580,6 +585,70 @@ async function kirim(kunci, parent, btn, ke) {
   });
   bar.addEventListener('pointerleave', reset);
   bar.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') reset(); });
+})();
+
+/* ================== FOTO SEMUA KARTU -> CLIPBOARD ================== */
+const FOTO_LIB = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js';
+let fotoLib = null;
+function muatFotoLib() {
+  if (window.htmlToImage) return Promise.resolve();
+  if (!fotoLib) fotoLib = new Promise((ok, gagal) => {
+    const sc = document.createElement('script'); sc.src = FOTO_LIB; sc.onload = ok; sc.onerror = () => { fotoLib = null; gagal(new Error('lib')); };
+    document.head.append(sc);
+  });
+  return fotoLib;
+}
+const tunggu = ms => new Promise(r => setTimeout(r, ms));
+async function buatFotoKartu() {
+  const root = document.documentElement, rapiLama = rapi, temaLama = root.dataset.tema, gulirX = scrollX, gulirY = scrollY;
+  try {
+    await muatFotoLib();
+    // semua tumpukan terbuka, latar putih polos, tanpa bilah dan kotak lain
+    rapi = true; root.dataset.tema = 'terang'; root.classList.add('foto');
+    window.scrollTo(0, 0); render();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); await tunggu(250);
+    // batas isi: gabungan semua kartu dan balasan
+    let l = 1e9, t = 1e9, r = -1e9, b = -1e9;
+    document.querySelectorAll('#dek .kartu:not(.lapis), #dek .balas').forEach(el => {
+      const q = el.getBoundingClientRect(); if (!q.width) return;
+      l = Math.min(l, q.left + scrollX); t = Math.min(t, q.top + scrollY); r = Math.max(r, q.right + scrollX); b = Math.max(b, q.bottom + scrollY);
+    });
+    if (l > r) throw new Error('kosong');
+    const P = 32; l = Math.max(0, l - P); t = Math.max(0, t - P); r += P; b += P;
+    const lebar = Math.ceil(r - l), tinggi = Math.ceil(b - t);
+    const pr = Math.max(.5, Math.min(2, window.devicePixelRatio || 1, 4000 / Math.max(lebar, tinggi)));
+    const docW = Math.max(root.scrollWidth, Math.ceil(r)), docH = Math.max(root.scrollHeight, Math.ceil(b));
+    const penuh = await htmlToImage.toCanvas(document.body, { pixelRatio: pr, width: docW, height: docH, cacheBust: false });
+    const out = document.createElement('canvas'); out.width = Math.round(lebar * pr); out.height = Math.round(tinggi * pr);
+    const g = out.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, out.width, out.height);
+    g.drawImage(penuh, Math.round(l * pr), Math.round(t * pr), out.width, out.height, 0, 0, out.width, out.height);
+    return await new Promise((ok, gagal) => out.toBlob(x => x ? ok(x) : gagal(new Error('blob')), 'image/png'));
+  } finally {
+    rapi = rapiLama; root.dataset.tema = temaLama; root.classList.remove('foto');
+    render(); window.scrollTo(gulirX, gulirY);
+  }
+}
+(function fotoMulai() {
+  const tb = document.getElementById('btn-foto');
+  tb.addEventListener('click', async () => {
+    if (tb.disabled) return;
+    tb.disabled = true; toast('Memotret semua kartu…');
+    try {
+      const janji = buatFotoKartu();
+      let tersalin = false;
+      try {
+        if (navigator.clipboard && window.ClipboardItem) { await navigator.clipboard.write([new ClipboardItem({ 'image/png': janji })]); tersalin = true; }
+      } catch (e) { /* diteruskan ke unduhan */ }
+      const blob = await janji;
+      if (tersalin) toast('Foto disalin ke clipboard ✓');
+      else {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dekken-kartu.png';
+        document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast('Clipboard tidak tersedia, foto diunduh.');
+      }
+    } catch (e) { toast(e && e.message === 'lib' ? 'Pustaka foto gagal dimuat (perlu internet).' : 'Gagal membuat foto.'); }
+    tb.disabled = false;
+  });
 })();
 
 /* ================== SUARA "dek dek" ================== */
@@ -893,11 +962,12 @@ function isiBantuan() {
     h('p', {}, 'Dekken adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
     ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim, satu nada rendah pendek saat kamu mengklik kartu atau tombol, serta dua nada naik saat dua kartu tersambung (satu nada turun saat sambungan dilepas), dan bunyi desir saat susunan berganti: menyebar untuk Acak, berkumpul untuk Rapi. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
+    ...bagian('Foto semua kartu', 'Tombol kamera di kanan atas (di sebelah ♪) membuka semua tumpukan, memotret seluruh kartu beserta garis koneksinya di atas latar putih polos, lalu menyalinnya ke clipboard supaya bisa langsung ditempel (Ctrl/Cmd+V). Kalau clipboard tidak tersedia di browsermu, fotonya diunduh. Fotonya tidak dikirim ke mana pun dan tampilanmu kembali seperti semula. Pada layar sempit, garis koneksi tidak ikut tergambar.'),
     ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
     ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke Dekken. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
-    ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu.'),
+    ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu. Garis sambunganmu sendiri berwarna sama dengan kartu asalnya, sedangkan sambungan orang lain berwarna putih (hitam di mode terang).'),
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
     ...bagian('Tampilan', 'Tombol ikon di kanan atas (di samping tombol ?) membuka pilihan: ☀ terang, ☾ gelap, ○ monokrom terang, ● monokrom gelap. Mode monokrom hanya memakai hitam dan putih (kontras penuh): kartu dan balasan saling berlawanan warna. Pilihan pertama mengikuti pengaturan perangkatmu, lalu diingat di browser ini dan tidak mengubah isi kartu.'),
@@ -1149,6 +1219,7 @@ function titikMulai() {
   document.addEventListener('click', () => titikLacak(900), true);
 }
 /* ---------- Sambungan antar kartu ---------- */
+const KUNING_GARIS = '#FEE440';
 let garisData = [];   // [[idAsal, idTujuan], ...]
 function titikTaut(p) {
   const milik = milikSaya.has(p.id);
@@ -1211,17 +1282,18 @@ function gambarGaris() {
     const p = titikPusat(ta), q = titikTepi(kb, p);
     const hidup = sorot === a || sorot === b, redup = sorot && !hidup;
     const d = lengkung(p, q), lebar = hidup ? 3.6 : 2.2, op = redup ? .22 : 1;
-    buat('path', { d, fill: 'none', stroke: halo, 'stroke-width': lebar + 3, 'stroke-linecap': 'round', opacity: op * .85 });
-    buat('path', { d, fill: 'none', stroke: tinta, 'stroke-width': lebar, 'stroke-linecap': 'round', opacity: op });
-    buat('circle', { cx: q.x, cy: q.y, r: lebar + 2.6, fill: halo, opacity: op });
-    buat('circle', { cx: q.x, cy: q.y, r: lebar + .8, fill: tinta, opacity: op });
+    const milik = milikSaya.has(a), wr = milik ? (warnaPost[a] || KUNING_GARIS) : tinta, hl = milik ? (gelap ? '#000' : '#222') : halo;   // sambunganmu berwarna kartu asalnya
+    buat('path', { d, fill: 'none', stroke: hl, 'stroke-width': lebar + 3, 'stroke-linecap': 'round', opacity: op * .85 });
+    buat('path', { d, fill: 'none', stroke: wr, 'stroke-width': lebar, 'stroke-linecap': 'round', opacity: op });
+    buat('circle', { cx: q.x, cy: q.y, r: lebar + 2.6, fill: hl, opacity: op });
+    buat('circle', { cx: q.x, cy: q.y, r: lebar + .8, fill: wr, opacity: op });
   });
   if (seret && seret.mode === 'tarik' && seret.gerak) {   // garis sementara saat menyeret
     const ka = document.querySelector('article.kartu[data-id="' + seret.id + '"] .tt');
     if (ka) {
       const p = titikPusat(ka), q = { x: seret.x + scrollX, y: seret.y + scrollY };
-      buat('path', { d: `M${p.x} ${p.y} L${q.x} ${q.y}`, fill: 'none', stroke: halo, 'stroke-width': 5.2, 'stroke-linecap': 'round', opacity: .85 });
-      buat('path', { d: `M${p.x} ${p.y} L${q.x} ${q.y}`, fill: 'none', stroke: tinta, 'stroke-width': 2.2, 'stroke-dasharray': '6 6', 'stroke-linecap': 'round' });
+      buat('path', { d: `M${p.x} ${p.y} L${q.x} ${q.y}`, fill: 'none', stroke: gelap ? '#000' : '#222', 'stroke-width': 5.2, 'stroke-linecap': 'round', opacity: .85 });
+      buat('path', { d: `M${p.x} ${p.y} L${q.x} ${q.y}`, fill: 'none', stroke: warnaPost[seret.id] || KUNING_GARIS, 'stroke-width': 2.2, 'stroke-dasharray': '6 6', 'stroke-linecap': 'round' });
     }
   }
 }
@@ -1323,8 +1395,8 @@ function render() {
   const utama = all.filter(p => !p.parent).sort(urutKartu());
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
-  petaTaut = {}; namaPost = {};
-  utama.forEach(p => { namaPost[p.id] = p.username; });
+  petaTaut = {}; namaPost = {}; warnaPost = {};
+  utama.forEach(p => { namaPost[p.id] = p.username; warnaPost[p.id] = KARTU[p.kartu] || KUNING_GARIS; });
   utama.forEach(p => p.tautan.forEach(t => {
     if (!namaPost[t]) return;
     (petaTaut[p.id] = petaTaut[p.id] || new Set()).add(t);
