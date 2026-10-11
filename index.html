@@ -75,6 +75,13 @@
     #alat .ikon:not(.kecil) { width:28px; height:28px; }
     .petunjuk { order:3; }
   }
+  #tema-wrap { position:relative; display:inline-flex; }
+  #menu-tema { position:absolute; right:0; top:calc(100% + 6px); z-index:40; display:flex; gap:4px; padding:4px; background:var(--p); border:2px solid var(--h); }
+  #menu-tema[hidden] { display:none; }
+  #menu-tema button { font:inherit; font-size:16px; line-height:1; min-width:36px; padding:6px 8px; background:var(--p); color:var(--h); border:2px solid transparent; cursor:pointer; }
+  #menu-tema button:hover { border-color:var(--h); }
+  #menu-tema button.aktif { background:var(--h); color:var(--p); }
+  :root[data-mono="1"] .dek { filter:grayscale(1); }
   #btn-tema, #btn-help { border:2px solid var(--h); padding:4px 10px; font-size:14px; min-width:34px; }
   .petunjuk { color:var(--h); background:#fff; padding:4px 10px; }
   #titik { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
@@ -210,7 +217,7 @@
   <div class="judul">
     <h1><b>Deck</b> : Tumpuk, balas, dan naikkan! <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
   </div>
-  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><button type="button" id="btn-tema" class="btn garis" aria-label="Ganti mode terang/gelap"></button><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
+  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><span id="tema-wrap"><button type="button" id="btn-tema" class="btn garis" aria-haspopup="true" aria-expanded="false" aria-label="Pilih tampilan"></button><div id="menu-tema" role="menu" hidden></div></span><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
 </header>
 <aside id="statistik"><button type="button" id="stat-judul" aria-expanded="true"><span>Statistik</span><span id="stat-panah">▾</span></button><div id="stat-isi"></div></aside>
 <nav id="alat"><div id="bentuk-baris"></div></nav>
@@ -694,7 +701,7 @@ function isiBantuan() {
     ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu.'),
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
-    ...bagian('Mode gelap', 'Tombol ☾/☀ di kanan atas (di samping tombol ?) mengganti mode terang dan gelap. Pilihan pertama mengikuti pengaturan perangkatmu, lalu diingat di browser ini.'),
+    ...bagian('Tampilan', 'Tombol ikon di kanan atas (di samping tombol ?) membuka pilihan: ☀ terang, ☾ gelap, ○ monokrom terang, ● monokrom gelap. Mode monokrom membuat semua warna kartu menjadi abu-abu. Pilihan pertama mengikuti pengaturan perangkatmu, lalu diingat di browser ini dan tidak mengubah isi kartu.'),
     ...bagian('Latar tanda ^', 'Tanda ^ kecil di latar menghadap atas; di dekat kursor (atau titik sentuhan di HP) tanda terdorong menjauh dan berputar menghadap kursor (atau titik sentuhan di HP). Ini hanya hiasan.'),
     ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
     ...bagian('Reset mingguan', 'Papan di-reset seminggu sekali, setiap Senin 00.00 WIB; isinya diarsipkan oleh pengelola. Hitung mundur di samping judul, misalnya [- 3 hari : 05 jam], menunjukkan sisa waktu tempel catatan minggu ini.'),
@@ -1100,17 +1107,30 @@ function tickTimer() {
 
 /* ================== MULAI ================== */
 (function temaMulai() {
-  const root = document.documentElement, tb = document.getElementById('btn-tema');
+  const root = document.documentElement, tb = document.getElementById('btn-tema'), menu = document.getElementById('menu-tema');
+  const PIL = [['terang', '☀', 'Terang'], ['gelap', '☾', 'Gelap'], ['mono-terang', '○', 'Monokrom terang'], ['mono-gelap', '●', 'Monokrom gelap']];
   let t = null;
   try { t = localStorage.getItem('deck-tema'); } catch (e) {}
-  if (t !== 'gelap' && t !== 'terang') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'gelap' : 'terang';
+  if (!PIL.some(x => x[0] === t)) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'gelap' : 'terang';
+  const tombol = PIL.map(([k, ik, nm]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = ik; b.title = nm; b.setAttribute('aria-label', nm); b.setAttribute('role', 'menuitemradio');
+    b.addEventListener('click', () => { t = k; try { localStorage.setItem('deck-tema', t); } catch (e) {} pasang(); tutup(); });
+    menu.appendChild(b); return b;
+  });
+  const tutup = () => { menu.hidden = true; tb.setAttribute('aria-expanded', 'false'); };
   const pasang = () => {
-    root.dataset.tema = t; tb.textContent = t === 'gelap' ? '☀' : '☾';
-    tb.title = t === 'gelap' ? 'Mode terang' : 'Mode gelap';
-    TITIK.warna = t === 'gelap' ? '#5c5c5c' : '#9a9a9a';
-    dispatchEvent(new Event('resize'));   // gambar ulang latar titik
+    const gelap = t === 'gelap' || t === 'mono-gelap', mono = t.indexOf('mono') === 0;
+    root.dataset.tema = gelap ? 'gelap' : 'terang';
+    if (mono) root.dataset.mono = '1'; else delete root.dataset.mono;
+    const cur = PIL.find(x => x[0] === t);
+    tb.textContent = cur[1]; tb.title = 'Tampilan: ' + cur[2];
+    PIL.forEach((x, i) => { tombol[i].classList.toggle('aktif', x[0] === t); tombol[i].setAttribute('aria-checked', x[0] === t ? 'true' : 'false'); });
+    TITIK.warna = gelap ? '#5c5c5c' : '#9a9a9a';
+    dispatchEvent(new Event('resize'));   // gambar ulang latar
   };
-  tb.addEventListener('click', () => { t = t === 'gelap' ? 'terang' : 'gelap'; try { localStorage.setItem('deck-tema', t); } catch (e) {} pasang(); });
+  tb.addEventListener('click', e => { e.stopPropagation(); const buka = menu.hidden; menu.hidden = !buka; tb.setAttribute('aria-expanded', buka ? 'true' : 'false'); });
+  document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) tutup(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) tutup(); });
   pasang();
 })();
 (function urutMulai() {
