@@ -14,6 +14,7 @@ Dibuat oleh Nurfahmi Muchlis, Arsitektur ITS, 2026.
 - **Koneksi antar kartu:** pembuat kartu menyambungkan kartunya ke kartu lain (maksimal 5) dengan garis berwarna kartu asal.
 - **Papan lebar:** mode Acak selebar minimal 6 kolom, bisa digeser ke samping dan di-zoom 40–160%, dibuka dari tengah. Mode Rapi mengikuti lebar layar.
 - **Peta kartu:** miniatur seluruh papan di kiri bawah untuk berpindah dengan klik atau seret.
+- **Polling (khusus dosen):** kartu merah (di semua tema) berisi satu pertanyaan dan 2–5 pilihan, dengan hitung mundur sendiri (1 jam sampai 7 hari). Akun terdaftar memilih satu jawaban dan hasilnya langsung tampil. Satu polling berjalan pada satu waktu, selalu di posisi pertama, tidak bisa dibalas, tetapi bisa disambungkan.
 - **Foto semua kartu:** tombol kamera menyalin foto seluruh papan (beserta garis koneksi) ke clipboard, atau mengunduhnya sebagai PNG.
 - **Tampilan:** terang, gelap, monokrom terang, monokrom gelap, dan tombol untuk mematikan latar tanda ^.
 - **Suara:** bunyi "dek dek" untuk kartu baru, nada klik, nada koneksi, dan desir saat Acak atau Rapi. Dibuat langsung oleh browser, tanpa file audio.
@@ -40,7 +41,7 @@ Seluruh aplikasi adalah satu berkas `index.html` tanpa proses build dan tanpa se
 | `Kode.gs` | Google Apps Script: verifikasi login, tulis kartu, suara, koneksi, reset mingguan |
 | `README.md` | Dokumen ini |
 
-Sheet yang dipakai: `Posts` (publik, dibaca sebagai CSV), serta `Votes`, `Log`, `Whitelist`, `Dosen`, dan `Arsip` (privat). Email tidak pernah masuk ke sheet publik.
+Sheet yang dipakai: `Posts` (publik, dibaca sebagai CSV), serta `Votes`, `Pilihan` (pilihan polling), `Log`, `Whitelist`, `Dosen`, dan `Arsip` (privat). Email tidak pernah masuk ke sheet publik.
 
 ## Memasang sendiri
 
@@ -65,7 +66,7 @@ Sheet yang dipakai: `Posts` (publik, dibaca sebagai CSV), serta `Votes`, `Log`, 
 1. **File > Share > Publish to web**.
 2. Pilih **hanya sheet `Posts`**, format **CSV**, lalu Publish.
 3. Salin tautannya ke `CONFIG.CSV_URL` di `index.html`.
-4. Jangan publikasikan `Votes`, `Log`, `Whitelist`, `Dosen`, atau `Arsip`.
+4. Jangan publikasikan `Votes`, `Pilihan`, `Log`, `Whitelist`, `Dosen`, atau `Arsip`.
 
 ### 5. GitHub Pages
 1. Unggah `index.html` ke repo.
