@@ -1022,7 +1022,7 @@ function gambarBingkai() {
 }
 
 /* ---------- Latar tanda ^ : semua menghadap atas; di dekat kursor tertarik seperti magnet dan berputar menghadap kursor ---------- */
-const TITIK = { jarak: 22, warna: '#9a9a9a', radiusDorong: 250, dorong: 55, radius: 420, kecepatan: .24, tinggi: 2.4, sayap: 3.2, tebal: 1.2 };   // ukuran ^ = 80% dari sebelumnya
+const TITIK = { jarak: 22, warna: '#9a9a9a', radiusDorong: 250, dorong: 28, radius: 420, kecepatan: .24, tinggi: 2.4, sayap: 3.2, tebal: 1.2 };   // ukuran ^ = 80% dari sebelumnya
 const PUSAT = { jangkauan: 120, kuat: 48, peka: 1.5, susut: .9 };   // caret menjauhi kartu yang sedang bergerak
 const titik = { push: new Map(), act: [], lacak: 0, lintas: 0, kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false, t0: 0 };
 function titikUkuran() {
@@ -1036,7 +1036,7 @@ function titikTarget(x, y) {
   const dx = x - titik.mx, dy = y - titik.my, d2 = dx * dx + dy * dy, R = TITIK.radius, RD = TITIK.radiusDorong;
   if (d2 < R * R) {
     const d = Math.sqrt(d2) || 1;
-    if (d < RD) { const kuat = Math.min(d * .7, Math.pow(1 - d / RD, 1.2) * TITIK.dorong); gx = -dx / d * kuat; gy = -dy / d * kuat; }   // magnet: tertarik ke kursor
+    if (d < RD) { const kuat = Math.min(d * .5, Math.pow(1 - d / RD, 1.2) * TITIK.dorong); gx = -dx / d * kuat; gy = -dy / d * kuat; }   // magnet: tertarik ke kursor
     const t = 1 - d / R, w = t * t * (3 - 2 * t);
     const menuju = Math.atan2(titik.my - (y + gy), titik.mx - (x + gx)) + Math.PI / 2;   // dari arah atas ke arah kursor
     sudut = Math.atan2(Math.sin(menuju), Math.cos(menuju)) * Math.min(1, w * 1.4);
