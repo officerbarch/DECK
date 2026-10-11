@@ -628,6 +628,37 @@ function bunyiSambung(tersambung) {
   if (tersambung) { nadaTunggal(c, t, 330, 330, .13, .3); nadaTunggal(c, t + .09, 495, 495, .2, .28); }
   else nadaTunggal(c, t, 250, 170, .16, .3);
 }
+// tampilan Acak: kartu "menyebar" (desir naik + ketukan acak); tampilan Rapi: kartu "berkumpul" (desir turun + ketukan merapat + dug lembut)
+function derau(c, durasi) {
+  const n = Math.max(1, Math.floor(c.sampleRate * durasi)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const src = c.createBufferSource(); src.buffer = buf; return src;
+}
+function desir(c, t, dur, f1, f2, vol) {
+  const src = derau(c, dur + .05), bp = c.createBiquadFilter(), g = c.createGain();
+  bp.type = 'bandpass'; bp.Q.value = .9; bp.frequency.setValueAtTime(f1, t); bp.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + dur * .35); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t); src.stop(t + dur + .05);
+}
+function ketuk(c, t, f, vol) {
+  const src = derau(c, .04), bp = c.createBiquadFilter(), g = c.createGain();
+  bp.type = 'bandpass'; bp.Q.value = 3; bp.frequency.value = f;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + .035);
+  src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t); src.stop(t + .04);
+}
+function bunyiSebar(berkumpul) {
+  if (!suaraKead.hidup) return;
+  const c = suaraKead.ctx; if (!c || c.state !== 'running') return;
+  const t = c.currentTime + .01, T = .34;
+  if (!berkumpul) {   // menyebar
+    desir(c, t, T, 400, 2600, .22);
+    for (let i = 0; i < 9; i++) ketuk(c, t + Math.pow(Math.random(), .8) * T, 900 + Math.random() * 2200, .5 - i * .03);
+  } else {            // berkumpul
+    desir(c, t, T, 2400, 380, .2);
+    for (let i = 0; i < 7; i++) ketuk(c, t + T * (1 - Math.pow(1 - i / 6, 1.6)) * .95, 700 + Math.random() * 1200, .35 + i * .04);
+    nadaTunggal(c, t + T, 130, 90, .12, .32);
+  }
+}
 (function suaraMulai() {
   const tb = document.getElementById('btn-suara');
   try { if (localStorage.getItem('deck-suara') === '0') suaraKead.hidup = false; } catch (e) {}
@@ -638,7 +669,7 @@ function bunyiSambung(tersambung) {
   const buka = () => { suaraSiap(); };
   document.addEventListener('click', e => {
     const x = e.target.closest && e.target.closest('button, a, select, summary, [role="menuitem"], article.kartu, .balas, .tt');
-    if (x && !x.closest('#btn-suara') && !x.disabled) bunyiKlik();
+    if (x && !x.closest('#btn-suara, #btn-rapi') && !x.disabled) bunyiKlik();
   }, true);
   addEventListener('pointerdown', buka, { passive: true }); addEventListener('keydown', buka);
   tb.addEventListener('click', () => {
@@ -861,7 +892,7 @@ function isiBantuan() {
     h('h2', {}, 'Cara memakai DekDek'),
     h('p', {}, 'DekDek adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
-    ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim, satu nada rendah pendek saat kamu mengklik kartu atau tombol, serta dua nada naik saat dua kartu tersambung (satu nada turun saat sambungan dilepas). Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
+    ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim, satu nada rendah pendek saat kamu mengklik kartu atau tombol, serta dua nada naik saat dua kartu tersambung (satu nada turun saat sambungan dilepas), dan bunyi desir saat susunan berganti: menyebar untuk Acak, berkumpul untuk Rapi. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
     ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
     ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke DekDek. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
@@ -1371,7 +1402,7 @@ function tickTimer() {
   const pasang = () => { tb.setAttribute('aria-pressed', rapi ? 'true' : 'false'); tb.textContent = rapi ? '▦ Rapi' : '▦ Acak'; };
   tb.addEventListener('click', () => {
     rapi = !rapi; try { localStorage.setItem('deck-rapi', rapi ? '1' : '0'); } catch (e) {}
-    pasang(); render();
+    pasang(); bunyiSebar(rapi); render();
   });
   pasang();
 })();
