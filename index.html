@@ -695,7 +695,7 @@ function isiBantuan() {
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
     ...bagian('Mode gelap', 'Tombol ☾/☀ di kanan atas (di samping tombol ?) mengganti mode terang dan gelap. Pilihan pertama mengikuti pengaturan perangkatmu, lalu diingat di browser ini.'),
-    ...bagian('Latar jarum', 'Jarum-jarum kecil di latar menghadap atas; di dekat kursor (atau titik sentuhan di HP) jarum terdorong menjauh dan berputar menghadap kursor (atau titik sentuhan di HP). Ini hanya hiasan.'),
+    ...bagian('Latar tanda ^', 'Tanda ^ kecil di latar menghadap atas; di dekat kursor (atau titik sentuhan di HP) tanda terdorong menjauh dan berputar menghadap kursor (atau titik sentuhan di HP). Ini hanya hiasan.'),
     ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
     ...bagian('Reset mingguan', 'Papan di-reset seminggu sekali, setiap Senin 00.00 WIB; isinya diarsipkan oleh pengelola. Hitung mundur di samping judul, misalnya [- 3 hari : 05 jam], menunjukkan sisa waktu tempel catatan minggu ini.'),
     ...bagian('Privasi', 'Email akunmu tidak ditampilkan di papan. Email tetap dicatat di sistem (hanya terlihat oleh pengelola) untuk mencegah suara ganda dan penyalahgunaan.'),
@@ -815,9 +815,9 @@ function gambarBingkai() {
   });
 }
 
-/* ---------- Latar jarum: semua menghadap atas; di dekat kursor terdorong menjauh dan berputar menghadap kursor ---------- */
-const TITIK = { jarak: 22, warna: '#9a9a9a', radiusDorong: 250, dorong: 38, radius: 420, kecepatan: .14, panjang: 7, lebar: 1.3 };
-const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false };
+/* ---------- Latar tanda ^ : semua menghadap atas; di dekat kursor terdorong menjauh dan berputar menghadap kursor ---------- */
+const TITIK = { jarak: 22, warna: '#9a9a9a', radiusDorong: 250, dorong: 38, radius: 420, kecepatan: .24, tinggi: 2.4, sayap: 3.2, tebal: 1.2 };   // ukuran ^ = 80% dari sebelumnya
+const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false, t0: 0 };
 function titikUkuran() {
   const k = titik.kanvas, d = window.devicePixelRatio || 1;
   k.width = Math.round(innerWidth * d); k.height = Math.round(innerHeight * d);
@@ -834,10 +834,13 @@ function titikTarget(x, y) {
   const menuju = Math.atan2(titik.my - (y + gy), titik.mx - (x + gx)) + Math.PI / 2;   // dari arah atas ke arah kursor
   return [gx, gy, Math.atan2(Math.sin(menuju), Math.cos(menuju)) * Math.min(1, w * 1.4)];
 }
-function titikGambar() {
-  const c = titik.ctx, J = TITIK.jarak, P = TITIK.panjang, B = TITIK.lebar;
+function titikGambar(now) {
+  const c = titik.ctx, J = TITIK.jarak, H = TITIK.tinggi, S = TITIK.sayap;
+  // kecepatan gerak tidak bergantung pada frame rate
+  const dt = Math.max(8, Math.min(50, now - (titik.t0 || now - 16.7))); titik.t0 = now;
+  const f = 1 - Math.pow(1 - TITIK.kecepatan, dt / 16.7);
   c.clearRect(0, 0, innerWidth, innerHeight);
-  c.fillStyle = TITIK.warna;
+  c.strokeStyle = TITIK.warna; c.lineWidth = TITIK.tebal; c.lineCap = c.lineJoin = 'round';
   const k0 = Math.floor(scrollY / J) - 1, k1 = Math.ceil((scrollY + innerHeight) / J) + 1;
   const i1 = Math.ceil(innerWidth / J) + 1;
   let bergerak = false;
@@ -853,7 +856,7 @@ function titikGambar() {
         if (titik.kurang) { g.x = tx; g.y = ty; g.a = ta; }
         else {
           const sel = Math.atan2(Math.sin(ta - g.a), Math.cos(ta - g.a));   // selisih sudut terpendek
-          g.x += (tx - g.x) * TITIK.kecepatan; g.y += (ty - g.y) * TITIK.kecepatan; g.a += sel * TITIK.kecepatan;
+          g.x += (tx - g.x) * f; g.y += (ty - g.y) * f; g.a += sel * f;
           if (Math.abs(tx - g.x) > .05 || Math.abs(ty - g.y) > .05 || Math.abs(sel) > .005) bergerak = true;
           else { g.x = tx; g.y = ty; g.a = ta; }
         }
@@ -861,20 +864,17 @@ function titikGambar() {
         px += g.x; py += g.y; a = g.a;
       }
       const co = Math.cos(a), si = Math.sin(a);
-      // jarum: ujung runcing di atas, pangkal bertitik di bawah (diputar sebesar a di sekitar pusatnya)
-      c.moveTo(px + P * si, py - P * co);                                         // ujung
-      c.lineTo(px + B * co - 3 * si, py + B * si + 3 * co);                       // pangkal kanan
-      c.lineTo(px - B * co - 3 * si, py - B * si + 3 * co);                       // pangkal kiri
-      c.closePath();
-      const dx = px - 5.4 * si, dy = py + 5.4 * co;                               // titik di pangkal
-      c.moveTo(dx + 1.6, dy); c.arc(dx, dy, 1.6, 0, 6.2832);
+      // ^ : (-S, H) -> (0, -H) -> (S, H), diputar sebesar a di sekitar pusatnya
+      c.moveTo(px - S * co - H * si, py - S * si + H * co);
+      c.lineTo(px + H * si, py - H * co);
+      c.lineTo(px + S * co - H * si, py + S * si + H * co);
     }
   }
-  c.fill();
+  c.stroke();
   titik.jalan = bergerak;
   if (bergerak) requestAnimationFrame(titikGambar);
 }
-function titikMinta() { if (!titik.jalan) { titik.jalan = true; requestAnimationFrame(titikGambar); } }
+function titikMinta() { if (!titik.jalan) { titik.jalan = true; titik.t0 = 0; requestAnimationFrame(titikGambar); } }
 function titikMulai() {
   titik.kanvas = document.getElementById('titik');
   titik.kurang = matchMedia('(prefers-reduced-motion: reduce)').matches;
