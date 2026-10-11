@@ -620,6 +620,7 @@ function kartuBalasan(p, i, n, prev, setelahKompos) {
     render(); gulirKompos();
   } }, 'Balas'));
   const el = h('div', { class: 'balas' + (lain ? ' kartu lain b-' + p.bentuk : '') }, isiKartu(p), balasBtn);
+  el.dataset.pid = p.id;
   // bentuk selain persegi punya sudut kosong, jadi digeser lebih ke samping agar tumpukan terlihat jelas
   const ekstra = lain ? 22 : 0;
   el.style.marginLeft = (i * langkah + (i > 0 ? ekstra : 0)).toFixed(1) + 'px';
@@ -740,7 +741,7 @@ function isiBantuan() {
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
     ...bagian('Tampilan', 'Tombol ikon di kanan atas (di samping tombol ?) membuka pilihan: ☀ terang, ☾ gelap, ○ monokrom terang, ● monokrom gelap. Mode monokrom hanya memakai hitam dan putih (kontras penuh): kartu dan balasan saling berlawanan warna. Pilihan pertama mengikuti pengaturan perangkatmu, lalu diingat di browser ini dan tidak mengubah isi kartu.'),
-    ...bagian('Latar tanda ^', 'Tanda ^ kecil di latar menghadap atas; di dekat kursor (atau titik sentuhan di HP) tanda terdorong menjauh dan berputar menghadap kursor (atau titik sentuhan di HP). Ini hanya hiasan.'),
+    ...bagian('Latar tanda ^', 'Tanda ^ kecil di latar menghadap atas; di dekat kursor (atau titik sentuhan di HP) tanda tertarik seperti magnet dan berputar menghadap kursor (atau titik sentuhan di HP). Kartu yang sedang bergerak juga menarik tanda di sekitarnya. Ini hanya hiasan.'),
     ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
     ...bagian('Reset mingguan', 'Papan di-reset seminggu sekali, setiap Senin 00.00 WIB; isinya diarsipkan oleh pengelola. Hitung mundur di samping judul, misalnya [- 3 hari : 05 jam], menunjukkan sisa waktu tempel catatan minggu ini.'),
     ...bagian('Privasi', 'Email akunmu tidak ditampilkan di papan. Email tetap dicatat di sistem (hanya terlihat oleh pengelola) untuk mencegah suara ganda dan penyalahgunaan.'),
@@ -860,30 +861,79 @@ function gambarBingkai() {
   });
 }
 
-/* ---------- Latar tanda ^ : semua menghadap atas; di dekat kursor terdorong menjauh dan berputar menghadap kursor ---------- */
-const TITIK = { jarak: 22, warna: '#9a9a9a', radiusDorong: 250, dorong: 38, radius: 420, kecepatan: .24, tinggi: 2.4, sayap: 3.2, tebal: 1.2 };   // ukuran ^ = 80% dari sebelumnya
-const titik = { kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false, t0: 0 };
+/* ---------- Latar tanda ^ : semua menghadap atas; di dekat kursor tertarik seperti magnet dan berputar menghadap kursor ---------- */
+const TITIK = { jarak: 22, warna: '#9a9a9a', radiusDorong: 250, dorong: 80, radius: 420, kecepatan: .24, tinggi: 2.4, sayap: 3.2, tebal: 1.2 };   // ukuran ^ = 80% dari sebelumnya
+const PUSAT = { jangkauan: 130, kuat: 70, peka: 1.5, susut: .9 };   // caret menjauhi kartu yang sedang bergerak
+const titik = { push: new Map(), act: [], lacak: 0, lintas: 0, kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false, t0: 0 };
 function titikUkuran() {
   const k = titik.kanvas, d = window.devicePixelRatio || 1;
   k.width = Math.round(innerWidth * d); k.height = Math.round(innerHeight * d);
   titik.ctx = k.getContext('2d'); titik.ctx.setTransform(d, 0, 0, d, 0, 0);
 }
-// target satu jarum: [geser x, geser y, sudut dari arah atas]. Dorong menjauhi kursor, putar menghadap kursor.
+// target satu jarum: [geser x, geser y, sudut dari arah atas]. Tertarik ke kursor seperti magnet, putar menghadap kursor.
 function titikTarget(x, y) {
+  let gx = 0, gy = 0, sudut = 0;
   const dx = x - titik.mx, dy = y - titik.my, d2 = dx * dx + dy * dy, R = TITIK.radius, RD = TITIK.radiusDorong;
-  if (d2 >= R * R) return [0, 0, 0];
-  const d = Math.sqrt(d2) || 1;
-  let gx = 0, gy = 0;
-  if (d < RD) { const kuat = Math.pow(1 - d / RD, 1.6) * TITIK.dorong; gx = dx / d * kuat; gy = dy / d * kuat; }
-  const t = 1 - d / R, w = t * t * (3 - 2 * t);
-  const menuju = Math.atan2(titik.my - (y + gy), titik.mx - (x + gx)) + Math.PI / 2;   // dari arah atas ke arah kursor
-  return [gx, gy, Math.atan2(Math.sin(menuju), Math.cos(menuju)) * Math.min(1, w * 1.4)];
+  if (d2 < R * R) {
+    const d = Math.sqrt(d2) || 1;
+    if (d < RD) { const kuat = Math.min(d * .88, Math.pow(1 - d / RD, 1.2) * TITIK.dorong); gx = -dx / d * kuat; gy = -dy / d * kuat; }   // magnet: tertarik ke kursor
+    const t = 1 - d / R, w = t * t * (3 - 2 * t);
+    const menuju = Math.atan2(titik.my - (y + gy), titik.mx - (x + gx)) + Math.PI / 2;   // dari arah atas ke arah kursor
+    sudut = Math.atan2(Math.sin(menuju), Math.cos(menuju)) * Math.min(1, w * 1.4);
+  }
+  // kartu yang sedang bergerak ikut menarik caret di sekitarnya seperti magnet
+  const M = PUSAT.jangkauan;
+  for (const p of titik.act) {
+    const cx = Math.max(p.l, Math.min(x, p.r)), cy = Math.max(p.t, Math.min(y, p.b));
+    let ex = x - cx, ey = y - cy, e = Math.sqrt(ex * ex + ey * ey);
+    if (e >= M) continue;
+    if (e < .5) { ex = x - (p.l + p.r) / 2; ey = y - (p.t + p.b) / 2; e = Math.sqrt(ex * ex + ey * ey) || 1; }
+    const kuat = Math.min(e * .9, Math.pow(1 - Math.min(e, M) / M, 1.2) * PUSAT.kuat * p.k);
+    gx -= ex / e * kuat; gy -= ey / e * kuat;
+  }
+  return [gx, gy, sudut];
+}
+// lacak kartu yang bergerak: bandingkan sisi-sisi kartu antar frame (koordinat halaman, jadi gulir tidak dihitung)
+function titikLacak(ms) { if (titik.kurang || !titik.ctx) return; titik.lacak = Math.max(titik.lacak, performance.now() + (ms || 900)); titikMinta(); }
+function titikKunci(el) { return el.dataset.id ? 'k' + el.dataset.id : el.dataset.pid ? 'b' + el.dataset.pid : null; }
+function titikRect(el, sx, sy) { const r = el.getBoundingClientRect(); return { l: r.left + sx, t: r.top + sy, r: r.right + sx, b: r.bottom + sy, ata: r.bottom < -150 || r.top > innerHeight + 150 }; }
+// dipanggil sebelum render() membangun ulang kartu: simpan posisi lama supaya lompatan tata letak juga terbaca
+function titikFoto() {
+  if (titik.kurang) return;
+  titik.foto = new Map();
+  document.querySelectorAll('.kartu:not(.lapis), .balas').forEach(el => { const k = titikKunci(el); if (k) titik.foto.set(k, titikRect(el, scrollX, scrollY)); });
+}
+function titikPelacak(now) {
+  const sx = scrollX, sy = scrollY, aktif = [], ukur = now < titik.lacak, lintas = ++titik.lintas, foto = titik.foto;
+  titik.foto = null;
+  if (ukur) {
+    document.querySelectorAll('.kartu:not(.lapis), .balas').forEach(el => {
+      const key = titikKunci(el); if (!key) return;
+      const c = titikRect(el, sx, sy); if (c.ata) return;
+      let p = titik.push.get(key), prev = p || (foto && foto.get(key));
+      if (!p) { p = Object.assign({}, c, { k: 0 }); titik.push.set(key, p); }
+      p.lintas = lintas;
+      if (prev) {
+        const v = Math.max(Math.abs(c.l - prev.l), Math.abs(c.r - prev.r), Math.abs(c.t - prev.t), Math.abs(c.b - prev.b));
+        p.k = Math.max(p.k * PUSAT.susut, v < .15 ? 0 : Math.min(1, v / PUSAT.peka));
+      }
+      p.l = c.l; p.t = c.t; p.r = c.r; p.b = c.b;
+    });
+  }
+  for (const [key, p] of titik.push) {
+    if (ukur && p.lintas !== lintas) { titik.push.delete(key); continue; }
+    if (!ukur) p.k *= PUSAT.susut;
+    if (p.k > .03) aktif.push({ l: p.l - sx, t: p.t - sy, r: p.r - sx, b: p.b - sy, k: p.k });
+    else if (!ukur) titik.push.delete(key);
+  }
+  titik.act = aktif;
 }
 function titikGambar(now) {
   const c = titik.ctx, J = TITIK.jarak, H = TITIK.tinggi, S = TITIK.sayap;
   // kecepatan gerak tidak bergantung pada frame rate
   const dt = Math.max(8, Math.min(50, now - (titik.t0 || now - 16.7))); titik.t0 = now;
   const f = 1 - Math.pow(1 - TITIK.kecepatan, dt / 16.7);
+  titikPelacak(now);
   c.clearRect(0, 0, innerWidth, innerHeight);
   c.strokeStyle = TITIK.warna; c.lineWidth = TITIK.tebal; c.lineCap = c.lineJoin = 'round';
   const k0 = Math.floor(scrollY / J) - 1, k1 = Math.ceil((scrollY + innerHeight) / J) + 1;
@@ -916,6 +966,7 @@ function titikGambar(now) {
     }
   }
   c.stroke();
+  bergerak = bergerak || titik.act.length > 0 || now < titik.lacak;
   titik.jalan = bergerak;
   if (bergerak) requestAnimationFrame(titikGambar);
 }
@@ -933,6 +984,9 @@ function titikMulai() {
   addEventListener('blur', pergi);
   addEventListener('resize', () => { titikUkuran(); titikMinta(); });
   addEventListener('scroll', titikMinta, { passive: true });
+  document.addEventListener('transitionrun', () => titikLacak(900), true);
+  document.addEventListener('animationstart', () => titikLacak(900), true);
+  document.addEventListener('click', () => titikLacak(900), true);
 }
 /* ---------- Sambungan antar kartu ---------- */
 let garisData = [];   // [[idAsal, idTujuan], ...]
@@ -1100,6 +1154,7 @@ function statMulai() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) hadir(); });
 }
 function render() {
+  titikFoto(); titikLacak(900);
   const dek = document.getElementById('dek'); dek.innerHTML = '';
   dek.classList.toggle('rapi', rapi);
   if (komposBuka) dek.append(h('div', { class: 'item' }, kompos('baru', '')));
