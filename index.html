@@ -39,7 +39,7 @@
     footer { position:fixed; left:0; bottom:0; margin:0; padding:0 0 10px 16px; z-index:15; pointer-events:none; }
   }
   .judul { flex:1 1 auto; min-width:0; }
-  #timer { font-size:13px; font-weight:700; margin-left:12px; white-space:nowrap; vertical-align:middle; }
+  #timer { font-size:1em; font-weight:700; margin-left:12px; white-space:nowrap; }
   #bantuan { position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:16px;
              background:rgba(255,255,255,.72); }
   #bantuan.buka { display:flex; }
@@ -51,6 +51,8 @@
   #bantuan .tutup-bantuan { margin-top:18px; }
   #bantuan .ikon.kecil { display:inline-block; width:14px; height:14px; margin:0 3px; vertical-align:-2px; background:#555; cursor:default; }
   .kanan { display:flex; align-items:center; gap:10px; }
+  #urut { font:inherit; font-size:14px; padding:4px 8px; background:var(--p); color:var(--h); border:2px solid var(--h); border-radius:0; cursor:pointer; }
+  #btn-rapi { border:2px solid var(--h); padding:4px 10px; font-size:14px; }
   #btn-rapi[aria-pressed="true"] { background:var(--h); color:var(--p); }
   #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
 
@@ -155,7 +157,7 @@
   .deck { position:relative; }
   .deck.berbalas > .kartu { cursor:pointer; position:relative; z-index:2; }
   /* mode Susun rapi: kolom rapi, tanpa kemiringan, semua balasan terbuka (hanya tampilan) */
-  .dek.rapi { display:block; column-width:310px; column-gap:26px; }
+  .dek.rapi { display:block; column-width:310px; column-gap:26px; zoom:.8; }   /* semua kartu 80% */
   .dek.rapi > .item { --dx:0px; --rot:0deg; --dy:0px; transform:none; break-inside:avoid; margin:0 0 26px; display:block; }
   .dek.rapi > .item.terbuka { margin:0 0 26px; }
   .dek.rapi .kartu, .dek.rapi .balas { transform:none !important; }
@@ -201,7 +203,7 @@
   <div class="judul">
     <h1><b>Deck</b> : Tumpuk. Balas. Naik. <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
   </div>
-  <div class="kanan"><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Susun semua kartu dalam kolom rapi dan buka semua balasan (hanya di tampilanmu)">▦ Susun rapi</button><div id="login"></div></div>
+  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Susun semua kartu dalam kolom rapi dan buka semua balasan (hanya di tampilanmu)">▦ Susun rapi</button><div id="login"></div></div>
 </header>
 <nav id="alat"><div id="bentuk-baris"></div><div id="sudut"><button type="button" id="btn-tema" class="btn" aria-label="Ganti mode terang/gelap"></button><button type="button" id="btn-help" class="btn">Petunjuk</button></div></nav>
 <div id="banner"></div>
@@ -238,6 +240,7 @@ let petaTaut = {}, namaPost = {};
 let seret = null;             // sedang membuat sambungan: { id, mode: 'tarik' | 'pilih', x, y, gerak }
 let sorot = null;             // id kartu yang sedang disorot kursor
 const MAKS_TAUTAN = 5;        // harus sama dengan MAKS_TAUTAN di Kode.gs
+let urutan = 'suara';         // urutan kartu utama: suara | terbaru | nama (pilihan tampilan, tersimpan di browser ini saja)
 let rapi = false;             // mode Susun rapi (pilihan tampilan, tersimpan di browser ini saja)
 let komposBuka = false;       // kartu penulis baru baru tampil setelah memilih bentuk di atas
 let draft = {};               // isi kartu penulis yang belum terkirim
@@ -372,6 +375,9 @@ function semua() {
 }
 const skor = p => p.up - p.down;
 const urut = (a, b) => skor(b) - skor(a) || new Date(b.waktu) - new Date(a.waktu);
+const urutKartu = () => urutan === 'terbaru' ? (a, b) => new Date(b.waktu) - new Date(a.waktu) || skor(b) - skor(a)
+  : urutan === 'nama' ? (a, b) => a.username.localeCompare(b.username, 'id', { sensitivity: 'base' }) || urut(a, b)
+  : urut;
 
 /* ================== PANGGIL APPS SCRIPT ================== */
 const PESAN = {
@@ -674,7 +680,7 @@ function isiBantuan() {
     h('p', {}, 'deck adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Kartu yang paling dibutuhkan naik ke atas.'),
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
     ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke deck. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '.'),
-    ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Tombol "Susun rapi" di kanan atas menyusun semua kartu dalam kolom rapi dan membuka semua balasan; ini hanya mengubah tampilanmu sendiri. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
+    ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Pilihan "Urut" di kanan atas mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol "Susun rapi" di sebelahnya menyusun semua kartu dalam kolom rapi dan membuka semua balasan; ini hanya mengubah tampilanmu sendiri. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
     ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Hanya pembuat kartu yang bisa memakai titik kartunya sendiri (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan.'),
     ...bagian('Aturan sambungan', 'Satu kartu maksimal 5 sambungan. Untuk menghapus sambungan, ulangi cara yang sama ke kartu yang sama. Sambungan hanya untuk kartu utama (bukan balasan). Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
@@ -1000,7 +1006,7 @@ function render() {
   dek.classList.toggle('rapi', rapi);
   if (komposBuka) dek.append(h('div', { class: 'item' }, kompos('baru', '')));
   const all = semua();
-  const utama = all.filter(p => !p.parent).sort(urut);
+  const utama = all.filter(p => !p.parent).sort(urutKartu());
   const anak = {};
   all.filter(p => p.parent).forEach(p => (anak[p.parent] = anak[p.parent] || []).push(p));
   petaTaut = {}; namaPost = {};
@@ -1051,6 +1057,15 @@ function tickTimer() {
   };
   tb.addEventListener('click', () => { t = t === 'gelap' ? 'terang' : 'gelap'; try { localStorage.setItem('deck-tema', t); } catch (e) {} pasang(); });
   pasang();
+})();
+(function urutMulai() {
+  const sel = document.getElementById('urut');
+  try { const v = localStorage.getItem('deck-urut'); if (v === 'terbaru' || v === 'nama') urutan = v; } catch (e) {}
+  sel.value = urutan;
+  sel.addEventListener('change', () => {
+    urutan = sel.value; try { localStorage.setItem('deck-urut', urutan); } catch (e) {}
+    render();
+  });
 })();
 (function rapiMulai() {
   const tb = document.getElementById('btn-rapi');
