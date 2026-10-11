@@ -12,7 +12,7 @@ Dibuat oleh Nurfahmi Muchlis, Arsitektur ITS, 2026.
 - **Balasan bertumpuk:** kartu yang dibalas tampil sebagai tumpukan; klik untuk membuka.
 - **Suara ↑ ↓:** satu akun satu suara per kartu, urut menurut skor lalu yang terbaru. Bisa diurutkan juga menurut waktu atau nama.
 - **Koneksi antar kartu:** pembuat kartu menyambungkan kartunya ke kartu lain (maksimal 5) dengan garis berwarna kartu asal.
-- **Papan lebar:** mode Acak selebar minimal 10 kolom, bisa digeser ke samping dan di-zoom 40–160%, dibuka dari tengah. Mode Rapi mengikuti lebar layar.
+- **Papan lebar:** mode Acak selebar minimal 6 kolom, bisa digeser ke samping dan di-zoom 40–160%, dibuka dari tengah. Mode Rapi mengikuti lebar layar.
 - **Peta kartu:** miniatur seluruh papan di kiri bawah untuk berpindah dengan klik atau seret.
 - **Foto semua kartu:** tombol kamera menyalin foto seluruh papan (beserta garis koneksi) ke clipboard, atau mengunduhnya sebagai PNG.
 - **Tampilan:** terang, gelap, monokrom terang, monokrom gelap, dan tombol untuk mematikan latar tanda ^.
