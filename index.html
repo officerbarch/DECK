@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DekDek</title>
+<title>Dekken</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -265,7 +265,7 @@
 
 <header>
   <div class="judul">
-    <h1><b>DekDek</b> : Tumpuk, balas, dan naikkan! <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
+    <h1><b>Dekken</b> : Tumpuk, balas, dan naikkan! <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
   </div>
   <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><span id="tema-wrap"><button type="button" id="btn-tema" class="btn garis" aria-haspopup="true" aria-expanded="false" aria-label="Pilih tampilan"></button><div id="menu-tema" role="menu" hidden></div></span><button type="button" id="btn-suara" class="btn garis" aria-pressed="true" aria-label="Suara kartu baru" title="Suara kartu baru: menyala">♪</button><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
 </header>
@@ -888,13 +888,13 @@ function kartuUtama(p, balasan) {
 function isiBantuan() {
   const batas = Object.keys(BENTUK).map(b => `${BENTUK[b].label} ${BENTUK[b].maks}`).join(', ');
   const bagian = (judul, teks) => [h('h3', {}, judul), h('p', {}, teks)];
-  return h('div', { class: 'lembar', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Cara memakai DekDek' },
-    h('h2', {}, 'Cara memakai DekDek'),
-    h('p', {}, 'DekDek adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
+  return h('div', { class: 'lembar', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Cara memakai Dekken' },
+    h('h2', {}, 'Cara memakai Dekken'),
+    h('p', {}, 'Dekken adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
     ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim, satu nada rendah pendek saat kamu mengklik kartu atau tombol, serta dua nada naik saat dua kartu tersambung (satu nada turun saat sambungan dilepas), dan bunyi desir saat susunan berganti: menyebar untuk Acak, berkumpul untuk Rapi. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
     ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
-    ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke DekDek. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
+    ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke Dekken. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
     ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu.'),
