@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deck</title>
+<title>DekDek</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@400;700&display=swap" rel="stylesheet">
@@ -61,6 +61,7 @@
   #stat-isi .baris-s { display:flex; justify-content:space-between; }
   #stat-isi .nama-s { margin-top:6px; font-size:13px; line-height:1.45; color:var(--abu); overflow-wrap:anywhere; }
   @media (max-width:640px) { #statistik { right:8px; bottom:58px; } }
+  @media (max-width:640px) { .kanan { gap:5px; } .kanan select, .kanan .btn { font-size:12px !important; padding:3px 6px !important; min-width:0 !important; } #urut { max-width:105px; } #btn-akun { max-width:90px; } }
   .kanan { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
   #urut { font:inherit; font-size:14px; padding:4px 8px; background:var(--p); color:var(--h); border:2px solid var(--h); border-radius:0; cursor:pointer; }
   #btn-rapi { border:2px solid var(--h); padding:4px 10px; font-size:14px; }
@@ -80,6 +81,12 @@
   #tema-wrap { position:relative; display:inline-flex; }
   #menu-tema { position:absolute; right:0; top:calc(100% + 6px); z-index:40; display:flex; gap:4px; padding:4px; background:var(--p); border:2px solid var(--h); }
   #menu-tema[hidden] { display:none; }
+  #akun-wrap { position:relative; display:inline-flex; }
+  #btn-akun { max-width:160px; overflow:hidden; text-overflow:ellipsis; border:2px solid var(--h); padding:4px 10px; font-size:14px; }
+  #menu-akun { position:absolute; right:0; top:calc(100% + 6px); z-index:40; padding:4px; background:var(--p); border:2px solid var(--h); }
+  #menu-akun[hidden] { display:none; }
+  #menu-akun button { font:inherit; font-size:14px; white-space:nowrap; min-width:90px; padding:6px 12px; background:var(--p); color:var(--h); border:2px solid transparent; cursor:pointer; }
+  #menu-akun button:hover { border-color:var(--h); }
   #menu-tema button { font:inherit; font-size:16px; line-height:1; min-width:36px; padding:6px 8px; background:var(--p); color:var(--h); border:2px solid transparent; cursor:pointer; }
   #menu-tema button:hover { border-color:var(--h); }
   #menu-tema button.aktif { background:var(--h); color:var(--p); }
@@ -120,6 +127,8 @@
   :root[data-mono="1"][data-tema="gelap"] .dek .balas.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-ledak); }
   :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-ledak { background:#fff !important; box-shadow:none; isolation:isolate; }
   :root[data-mono="1"][data-tema="gelap"] .dek .lapis.kartu.b-ledak::before { content:""; position:absolute; inset:1px; z-index:-1; background:#000; clip-path:var(--c-ledak); }
+  #btn-suara { border:2px solid var(--h); padding:4px 10px; font-size:14px; min-width:34px; }
+  #btn-suara.mati { opacity:.55; text-decoration:line-through; }
   #btn-tema, #btn-help { border:2px solid var(--h); padding:4px 10px; font-size:14px; min-width:34px; }
   .petunjuk { color:var(--h); background:#fff; padding:4px 10px; }
   #titik { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
@@ -253,9 +262,9 @@
 
 <header>
   <div class="judul">
-    <h1><b>Deck</b> : Tumpuk, balas, dan naikkan! <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
+    <h1><b>DekDek</b> : Tumpuk, balas, dan naikkan! <span id="timer" title="Sisa waktu tempel catatan sebelum papan di-reset"></span></h1>
   </div>
-  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><span id="tema-wrap"><button type="button" id="btn-tema" class="btn garis" aria-haspopup="true" aria-expanded="false" aria-label="Pilih tampilan"></button><div id="menu-tema" role="menu" hidden></div></span><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
+  <div class="kanan"><select id="urut" aria-label="Urutkan kartu" title="Urutkan kartu (hanya di tampilanmu)"><option value="suara">Urut: Suara</option><option value="terbaru">Urut: Terbaru</option><option value="nama">Urut: Nama A–Z</option></select><button type="button" id="btn-rapi" class="btn garis" aria-pressed="false" title="Ganti tampilan kartu: Acak (tempelan miring) atau Rapi (kolom rapi, semua balasan terbuka). Hanya di tampilanmu.">▦ Acak</button><span id="tema-wrap"><button type="button" id="btn-tema" class="btn garis" aria-haspopup="true" aria-expanded="false" aria-label="Pilih tampilan"></button><div id="menu-tema" role="menu" hidden></div></span><button type="button" id="btn-suara" class="btn garis" aria-pressed="true" aria-label="Suara kartu baru" title="Suara kartu baru: menyala">♪</button><button type="button" id="btn-help" class="btn garis" aria-label="Petunjuk" title="Petunjuk">?</button><div id="login"></div></div>
 </header>
 <aside id="statistik"><button type="button" id="stat-judul" aria-expanded="true"><span>Statistik</span><span id="stat-panah">▾</span></button><div id="stat-isi"></div></aside>
 <nav id="alat"><div id="bentuk-baris"></div></nav>
@@ -409,6 +418,11 @@ async function muat(otomatis) {
       daftar = (await r.json()).posts || [];
     }
     dataServer = daftar.map(normal).filter(p => p.id && p.teks);
+    {   // bunyi "dek dek" bila ada kartu baru dari orang lain
+      const kini = new Set(dataServer.map(p => p.id));
+      if (suaraKead.dikenal && otomatis && dataServer.some(p => !suaraKead.dikenal.has(p.id) && !milikSaya.has(p.id))) bunyiDekdek();
+      lokal.forEach(p => kini.add(p.id)); suaraKead.dikenal = kini;
+    }
     render();
   } catch (e) { if (!otomatis) toast('Gagal memuat data.'); }
 }
@@ -470,10 +484,22 @@ function initGoogle() {
   });
   renderLogin();
 }
+function namaAkun() {
+  try {
+    const p = JSON.parse(decodeURIComponent(escape(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
+    return String(p.name || p.given_name || getUser() || 'Akun').trim();
+  } catch (e) { return getUser() || 'Akun'; }
+}
+document.addEventListener('click', e => { const m = document.getElementById('menu-akun'); if (m && !m.hidden && !m.contains(e.target)) m.hidden = true; });
+document.addEventListener('keydown', e => { const m = document.getElementById('menu-akun'); if (e.key === 'Escape' && m && !m.hidden) m.hidden = true; });
 function renderLogin() {
   const el = document.getElementById('login'); el.innerHTML = '';
   if (tokenHidup()) {
-    el.append(h('button', { class: 'btn', onclick: () => keluar() }, 'Keluar'));
+    const nm = namaAkun();
+    const menu = h('div', { id: 'menu-akun', role: 'menu', hidden: '' }, h('button', { type: 'button', role: 'menuitem', onclick: () => { menu.hidden = true; keluar(); } }, 'Keluar'));
+    const tb = h('button', { type: 'button', class: 'btn garis', id: 'btn-akun', 'aria-haspopup': 'true', 'aria-expanded': 'false', title: 'Akun: ' + nm,
+      onclick: e => { e.stopPropagation(); menu.hidden = !menu.hidden; tb.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true'); } }, nm);
+    el.append(h('span', { id: 'akun-wrap' }, tb, menu));
   } else if (siap(CONFIG.GOOGLE_CLIENT_ID) && window.google && google.accounts) {
     const slot = h('div'); el.append(slot);
     google.accounts.id.renderButton(slot, { theme: 'outline', size: 'medium', text: 'signin_with' });
@@ -519,10 +545,50 @@ async function kirim(kunci, parent, btn, ke) {
     localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); localStorage.setItem('deck_bentuk', d.b);
     delete draft[kunci];
     if (parent) { balasTerbuka = null; balasKe = null; dekBuka = parent; } else komposBuka = false;
-    toast('Terkirim ✓');
+    toast('Terkirim ✓'); bunyiDekdek();
+    if (suaraKead.dikenal) suaraKead.dikenal.add(j.post.id);
   } catch (e) { toast(e.message); }
   renderAlat(); render();
 }
+
+/* ================== SUARA "dek dek" ================== */
+// satu nada rendah yang berdetak dua kali; dibuat langsung oleh browser (tanpa file audio)
+const SUARA = { nada: 360, jeda: .16, susut: 38, panjang: .1, volume: .5 };
+const suaraKead = { ctx: null, hidup: true, dikenal: null };
+function suaraSiap() {
+  if (suaraKead.ctx) { if (suaraKead.ctx.state === 'suspended') suaraKead.ctx.resume().catch(() => {}); return suaraKead.ctx; }
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+  try { suaraKead.ctx = new AC(); } catch (e) { return null; }
+  return suaraKead.ctx;
+}
+function bunyiDekdek() {
+  if (!suaraKead.hidup) return;
+  const c = suaraKead.ctx; if (!c || c.state !== 'running') return;   // browser memblokir suara sebelum ada interaksi
+  const t0 = c.currentTime + .02;
+  [0, SUARA.jeda].forEach(d => {
+    const t = t0 + d, g = c.createGain(), o1 = c.createOscillator(), o2 = c.createOscillator(), g2 = c.createGain();
+    o1.frequency.value = SUARA.nada; o2.frequency.value = SUARA.nada * 2; g2.gain.value = .3;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(SUARA.volume, t + .002);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + SUARA.panjang);
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(c.destination);
+    o1.start(t); o2.start(t); o1.stop(t + SUARA.panjang + .02); o2.stop(t + SUARA.panjang + .02);
+  });
+}
+(function suaraMulai() {
+  const tb = document.getElementById('btn-suara');
+  try { if (localStorage.getItem('deck-suara') === '0') suaraKead.hidup = false; } catch (e) {}
+  const pasang = () => {
+    tb.classList.toggle('mati', !suaraKead.hidup); tb.setAttribute('aria-pressed', suaraKead.hidup ? 'true' : 'false');
+    tb.title = 'Suara kartu baru: ' + (suaraKead.hidup ? 'menyala' : 'mati');
+  };
+  const buka = () => { suaraSiap(); };
+  addEventListener('pointerdown', buka, { passive: true }); addEventListener('keydown', buka);
+  tb.addEventListener('click', () => {
+    suaraKead.hidup = !suaraKead.hidup; try { localStorage.setItem('deck-suara', suaraKead.hidup ? '1' : '0'); } catch (e) {}
+    pasang(); suaraSiap(); if (suaraKead.hidup) bunyiDekdek();   // contoh bunyi saat dinyalakan
+  });
+  pasang();
+})();
 
 /* ================== TOMBOL BENTUK DI ATAS ================== */
 function pilihBentukBaru(b) {
@@ -730,11 +796,13 @@ function kartuUtama(p, balasan) {
 function isiBantuan() {
   const batas = Object.keys(BENTUK).map(b => `${BENTUK[b].label} ${BENTUK[b].maks}`).join(', ');
   const bagian = (judul, teks) => [h('h3', {}, judul), h('p', {}, teks)];
-  return h('div', { class: 'lembar', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Cara memakai Deck' },
-    h('h2', {}, 'Cara memakai Deck'),
-    h('p', {}, 'Deck adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
+  return h('div', { class: 'lembar', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Cara memakai DekDek' },
+    h('h2', {}, 'Cara memakai DekDek'),
+    h('p', {}, 'DekDek adalah papan catatan tempel untuk kelas: tanya, beri info, dan tanggapi. Tumpuk, balas, dan naikkan yang penting.'),
     ...bagian('Membaca', 'Semua orang bisa membaca papan tanpa login.'),
-    ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke Deck. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
+    ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
+    ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
+    ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke DekDek. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
     ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu.'),
