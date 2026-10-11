@@ -135,7 +135,10 @@
   .ikon { width:34px; height:34px; background:#9a9a9a; border:none; padding:0; cursor:pointer; flex-shrink:0; }
   .ikon.kecil { width:26px; height:26px; }
   .ikon:hover, .ikon.pilih { background:var(--h); }
-  .ikon.pilih { transform:scale(1.12); }
+  .ikon { transition:transform .16s cubic-bezier(.2,.8,.3,1), background-color .15s; }
+  .ikon.pilih { transform:scale(1.1); }
+  #alat .ikon { transform-origin:50% 100%; }
+  @media (prefers-reduced-motion:reduce) { .ikon { transition:none; } }
   .ikon.b-lingkaran { border-radius:50%; }
   .ikon.b-enam { clip-path:var(--c-enam); }
   .ikon.b-ledak { clip-path:var(--c-ledak); }
@@ -551,6 +554,34 @@ async function kirim(kunci, parent, btn, ke) {
   renderAlat(); render();
 }
 
+/* ================== BAR BENTUK: membesar seperti dock (macOS) ================== */
+(function dokMulai() {
+  const bar = document.getElementById('alat');
+  const MAKS = 1.7, SEBAR = 52;   // skala tertinggi dan lebar pengaruh (px)
+  const ikon = () => [...bar.querySelectorAll('.ikon')];
+  const reset = () => ikon().forEach(k => { k.style.transform = ''; });
+  bar.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const L = ikon(); if (!L.length) return;
+    const px = e.clientX - bar.getBoundingClientRect().left;   // satu sistem koordinat dengan offsetLeft
+    const info = L.map(k => {
+      const w = k.offsetWidth, c = k.offsetLeft + w / 2, d = (px - c) / SEBAR;
+      const s = Math.max(k.classList.contains('pilih') ? 1.1 : 1, 1 + (MAKS - 1) * Math.exp(-d * d));
+      return { k, w, c, s, tambah: w * (s - 1) };
+    });
+    const total = info.reduce((a, o) => a + o.tambah, 0);
+    const awal = info[0].k.offsetLeft, lebar = info[info.length - 1].k.offsetLeft + info[info.length - 1].w - awal;
+    const rasio = Math.min(1, Math.max(0, (px - awal) / (lebar || 1)));   // ikon di bawah kursor tetap di tempatnya
+    let kiri = 0;
+    info.forEach(o => {
+      const geser = kiri + o.tambah / 2 - total * rasio; kiri += o.tambah;
+      o.k.style.transform = `translateX(${geser.toFixed(1)}px) scale(${o.s.toFixed(3)})`;
+    });
+  });
+  bar.addEventListener('pointerleave', reset);
+  bar.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') reset(); });
+})();
+
 /* ================== SUARA "dek dek" ================== */
 // satu nada rendah yang berdetak dua kali; dibuat langsung oleh browser (tanpa file audio)
 const SUARA = { nada: 360, jeda: .16, susut: 38, panjang: .1, volume: .5 };
@@ -612,16 +643,19 @@ function pilihBentukBaru(b) {
   if (komposBuka) requestAnimationFrame(() => { const k = document.querySelector('#dek .kompos'); if (k) k.scrollIntoView({ block: 'center', behavior: 'smooth' }); });
 }
 function renderAlat() {
-  const el = document.getElementById('bentuk-baris'); el.innerHTML = '';
+  const el = document.getElementById('bentuk-baris');
   const aktif = komposBuka ? ambilDraft('baru').b : null;
-  el.append(
-    ...Object.keys(BENTUK).map(b => h('button', {
-      type: 'button', class: 'ikon b-' + b + (b === aktif ? ' pilih' : ''),
+  // tombol dibuat sekali lalu hanya diubah kelasnya, supaya perubahan ukuran teranimasi
+  if (!el.querySelector('.ikon')) {
+    el.append(...Object.keys(BENTUK).map(b => h('button', {
+      type: 'button', class: 'ikon b-' + b, 'data-bentuk': b,
       title: `${BENTUK[b].label} · maks ${BENTUK[b].maks} huruf`, 'aria-label': BENTUK[b].label,
       onclick: () => pilihBentukBaru(b)
-    })),
-    aktif ? h('span', { class: 'petunjuk' }, `${BENTUK[aktif].label} · maks ${BENTUK[aktif].maks} huruf`) : []
-  );
+    })));
+  }
+  el.querySelectorAll('.ikon').forEach(k => k.classList.toggle('pilih', k.dataset.bentuk === aktif));
+  const lama = el.querySelector('.petunjuk'); if (lama) lama.remove();
+  if (aktif) el.append(h('span', { class: 'petunjuk' }, `${BENTUK[aktif].label} \u00b7 maks ${BENTUK[aktif].maks} huruf`));
 }
 
 /* ================== RENDER ================== */
