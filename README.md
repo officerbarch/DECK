@@ -41,7 +41,7 @@ Seluruh aplikasi adalah satu berkas `index.html` tanpa proses build dan tanpa se
 | `Kode.gs` | Google Apps Script: verifikasi login, tulis kartu, suara, koneksi, reset mingguan |
 | `README.md` | Dokumen ini |
 
-Sheet yang dipakai: `Posts` (publik, dibaca sebagai CSV), serta `Votes`, `Pilihan` (pilihan polling), `Log`, `Whitelist`, `Dosen`, dan `Arsip` (privat). Email tidak pernah masuk ke sheet publik.
+Sheet yang dipakai: `Posts` (publik, dibaca sebagai CSV), serta `Votes`, `Pilihan` (pilihan polling), `Notifikasi` (penerima email), `Log`, `Whitelist`, `Dosen`, dan `Arsip` (privat). Email tidak pernah masuk ke sheet publik.
 
 ## Memasang sendiri
 
@@ -62,11 +62,18 @@ Sheet yang dipakai: `Posts` (publik, dibaca sebagai CSV), serta `Votes`, `Piliha
 2. Salin URL berakhiran `/exec` ke `CONFIG.SCRIPT_URL` di `index.html`.
 3. Setiap `Kode.gs` berubah: **Deploy > Manage deployments > Edit > New version > Deploy**. URL tetap sama.
 
+### Notifikasi untuk admin (opsional)
+1. Di Apps Script, pilih fungsi `pasangNotifikasi` lalu klik **Run** sekali dan setujui izin kirim email.
+2. Setelah itu, tiap 5 menit skrip mengirim satu email ringkasan ke pemilik skrip bila ada kartu baru, balasan, polling baru, atau polling yang baru selesai. Email muncul sebagai notifikasi di HP lewat aplikasi Gmail.
+3. Daftar penerima diatur di sheet `Notifikasi` kolom A (mulai baris 2), satu email per baris, maksimal 20. Tiap penerima mendapat emailnya sendiri. Bila sheet kosong, email dikirim ke pemilik skrip (atau ke `EMAIL_ADMIN` bila diisi). Jangan publikasikan sheet ini. Untuk mencantumkan alamat situs di email, isi `SITUS_URL`.
+4. Untuk menghentikan, jalankan `matikanNotifikasi`.
+5. Karena ada izin baru, deploy ulang: **Deploy > Manage deployments > Edit > New version > Deploy**.
+
 ### 4. Publikasikan sheet Posts sebagai CSV
 1. **File > Share > Publish to web**.
 2. Pilih **hanya sheet `Posts`**, format **CSV**, lalu Publish.
 3. Salin tautannya ke `CONFIG.CSV_URL` di `index.html`.
-4. Jangan publikasikan `Votes`, `Pilihan`, `Log`, `Whitelist`, `Dosen`, atau `Arsip`.
+4. Jangan publikasikan `Votes`, `Pilihan`, `Notifikasi`, `Log`, `Whitelist`, `Dosen`, atau `Arsip`.
 
 ### 5. GitHub Pages
 1. Unggah `index.html` ke repo.
