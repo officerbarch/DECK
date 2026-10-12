@@ -373,12 +373,16 @@
   .poll .poll-lama select { width:auto; }
   .ikon.poll { border-radius:6px; position:relative; }
   .ikon.poll::before { content:''; position:absolute; left:20%; right:20%; top:22%; bottom:22%; background:linear-gradient(var(--p) 0 0) 0 0/100% 18% no-repeat, linear-gradient(var(--p) 0 0) 0 50%/70% 18% no-repeat, linear-gradient(var(--p) 0 0) 0 100%/40% 18% no-repeat; }
-  .hapus { font:inherit; font-size:12px; line-height:1.2; padding:2px 8px; color:inherit; background:transparent; border:1px solid currentColor; cursor:pointer; opacity:.7; }
-  .hapus:hover, .hapus:focus-visible { opacity:1; }
-  .hapus.ya { font-weight:700; opacity:1; }
-  .hapus-konfirm { display:inline-flex; align-items:center; flex-wrap:wrap; gap:4px; font-size:12px; }
+  .btn.ikon-btn { display:inline-flex; align-items:center; justify-content:center; width:40px !important; height:30px !important; padding:0 !important; }
+  .btn.ikon-btn svg { display:block; pointer-events:none; }
+  .btn.kecil-teks { font-size:12px; padding:3px 10px; font-weight:700; }
+  .hapus-konfirm { display:inline-flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:12px; }
+  .poll .btn.ikon-btn, .poll .btn.kecil-teks { background:#111; color:#fff; border-color:transparent; }
+  .poll .btn.ikon-btn:hover:not(:disabled), .poll .btn.kecil-teks:hover:not(:disabled) { background:#fff; color:#111; }
   .poll .poll-kanan { display:inline-flex; align-items:center; gap:8px; }
-  .poll .hapus { color:#fff; }
+  #tip { position:fixed; z-index:120; padding:5px 9px; font:12px Arial, sans-serif; color:#fff; background:#111; border:1px solid rgba(255,255,255,.55); border-radius:3px; pointer-events:none; white-space:nowrap; transform:translate(-50%, -100%); }
+  #tip[hidden] { display:none; }
+  html.foto #tip { display:none !important; }
 </style>
 </head>
 <body>
@@ -397,6 +401,7 @@
 <main class="dek" id="dek"></main>
 <div id="bantuan"></div>
 <div id="toast"></div>
+<div id="tip" hidden></div>
 
 <script>
 /* ================== KONFIGURASI (ISI 3 BARIS INI) ================== */
@@ -997,16 +1002,22 @@ function kompos(kunci, parent, ke) {
     h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
   return h('div', { class: 'kompos' + (parent ? ' popup' : '') }, ke ? h('div', { class: 'ke' }, '↳ membalas @' + ke.username) : null, kartu, kontrol);
 }
-// tombol Hapus: untuk pembuat kartu, dan untuk dosen (semua kartu). Klik pertama meminta konfirmasi di tempat.
+// ikon tombol (SVG garis) untuk Balas dan Hapus
+const IKON_BALAS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>';
+const IKON_HAPUS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+function tombolIkon(ikon, tip, klik) {
+  const b = h('button', { type: 'button', class: 'btn ikon-btn', 'data-tip': tip, 'aria-label': tip, onclick: klik });
+  b.innerHTML = ikon; return b;
+}
+// tombol Hapus (✕): untuk pembuat kartu, dan untuk dosen (semua kartu). Klik pertama meminta konfirmasi di tempat.
 function tombolHapus(p, nBalasan) {
   if (!(milikSaya.has(p.id) || dosenSaya)) return null;
   if (hapusKonfirm === p.id) {
-    const ya = h('button', { type: 'button', class: 'hapus ya', onclick: e => { e.stopPropagation(); hapusKartu(p.id, ya); } }, 'Ya');
-    const tidak = h('button', { type: 'button', class: 'hapus', onclick: e => { e.stopPropagation(); hapusKonfirm = null; render(); } }, 'Batal');
-    return h('span', { class: 'hapus-konfirm' }, nBalasan ? `Hapus + ${nBalasan} balasan? ` : 'Hapus? ', ya, tidak);
+    const ya = h('button', { type: 'button', class: 'btn kecil-teks', onclick: e => { e.stopPropagation(); hapusKartu(p.id, ya); } }, 'Ya');
+    const tidak = h('button', { type: 'button', class: 'btn kecil-teks', onclick: e => { e.stopPropagation(); hapusKonfirm = null; render(); } }, 'Batal');
+    return h('span', { class: 'hapus-konfirm' }, nBalasan ? `Hapus + ${nBalasan} balasan?` : 'Hapus?', ya, tidak);
   }
-  return h('button', { type: 'button', class: 'hapus', title: nBalasan ? 'Hapus kartu ini beserta semua balasannya' : 'Hapus', 'aria-label': 'Hapus kartu',
-    onclick: e => { e.stopPropagation(); hapusKonfirm = p.id; render(); } }, 'Hapus');
+  return tombolIkon(IKON_HAPUS, nBalasan ? 'Hapus kartu beserta semua balasannya' : 'Hapus', e => { e.stopPropagation(); hapusKonfirm = p.id; render(); });
 }
 function komposPoll() {
   const d = pollDraft; if (!d.u) d.u = getUser();
@@ -1086,12 +1097,12 @@ function kartuBalasan(p, i, n, prev, setelahKompos) {
   const lain = p.bentuk !== 'persegi';
   const langkah = n > 1 ? Math.min(14, 56 / (n - 1)) : 0;   // geser kanan per tingkat
   const geser = ((n - 1) * langkah).toFixed(1);
-  const balasBtn = h('div', { class: 'bawah' }, h('button', { class: 'btn', onclick: e => {
+  const balasBtn = h('div', { class: 'bawah' }, tombolHapus(p, 0), tombolIkon(IKON_BALAS, 'Balas', e => {
     e.stopPropagation();
     if (balasTerbuka === p.parent && balasKe === p.id) { balasTerbuka = null; balasKe = null; }
     else { bukaDek(p.parent); balasTerbuka = p.parent; balasKe = p.id; }
     render(); gulirKompos();
-  } }, 'Balas'), tombolHapus(p, 0));
+  }));
   const el = h('div', { class: 'balas' + (lain ? ' kartu lain b-' + p.bentuk : '') }, isiKartu(p), balasBtn);
   el.dataset.pid = p.id;
   // bentuk selain persegi punya sudut kosong, jadi digeser lebih ke samping agar tumpukan terlihat jelas
@@ -1147,15 +1158,15 @@ function kartuUtama(p, balasan) {
   item.style.setProperty('--rot', ((acak(p.id, 'r') - .5) * 2.4).toFixed(2) + 'deg');
   item.style.setProperty('--dy', (acak(p.id, 'y') * 16).toFixed(1) + 'px');
   const bawah = h('div', { class: 'bawah' },
-    h('button', { class: 'btn', onclick: e => {
+    tombolHapus(p, n),
+    tombolIkon(IKON_BALAS, 'Balas', e => {
       e.stopPropagation();
       if (balasTerbuka === p.id && !balasKe) { balasTerbuka = null; }
       else { bukaDek(p.id); balasTerbuka = p.id; balasKe = null; }
       render(); gulirKompos();
-    } }, 'Balas'),
+    }),
     titikTaut(p),
-    n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null,
-    tombolHapus(p, n));
+    n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null);
   const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') }, isiKartu(p), bawah, labelTaut(p));
   kartu.dataset.id = p.id;
   kartu.style.background = `color-mix(in srgb, ${KARTU[p.kartu]} 92%, #000)`;   // lapisan paling depan dalam deck
@@ -1212,12 +1223,12 @@ function isiBantuan() {
     ...bagian('Foto semua kartu', 'Tombol kamera di kanan atas (di sebelah ♪) memotret semua kartu sekaligus: semua tumpukan dibuka sementara, garis koneksi ikut tergambar dengan warnanya, dan latarnya putih polos. Hasilnya disalin ke clipboard, jadi bisa langsung ditempel (Ctrl/Cmd+V) ke dokumen, chat, atau slide. Kalau clipboard tidak tersedia di browsermu, fotonya diunduh sebagai dekken-kartu.png. Butuh koneksi internet saat dipakai pertama kali. Fotonya tidak dikirim ke mana pun dan tampilanmu kembali seperti semula. Di layar sempit (HP), garis koneksi tidak ikut tergambar.'),
     ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
     ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke Dekken. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
-    ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik Balas di kartu utama untuk membalas postingan, atau Balas di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
+    ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik tombol hitam berikon panah ↩ (Balas) di kartu utama untuk membalas postingan, atau di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
     ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu. Warna garis: garis yang kamu buat berwarna sama dengan kartu asalnya (kuning, pink, biru, hijau, atau ungu) dengan tepi gelap tipis agar tetap terbaca, termasuk garis yang sedang kamu seret. Garis buatan orang lain berwarna putih di mode gelap dan hitam di mode terang.'),
     ...bagian('Menggeser dan zoom', 'Di mode Acak, papan selebar minimal 6 kolom (layar yang lebih lebar menampilkan lebih banyak kolom) dan dibuka dari tengah. Geser ke samping dengan menyeret latar kosong memakai mouse, Shift + gulir, atau dua jari di trackpad; di HP cukup geser dengan jari. Zoom lewat tombol − dan + di panel Peta kartu, atau Ctrl + gulir (cubit di trackpad), dari 40% sampai 160%; klik angka persennya untuk kembali ke 100%. Memperkecil zoom membantu melihat banyak kartu dan garis koneksi sekaligus. Mode Rapi selalu mengikuti lebar layar. Zoom tidak diingat saat halaman dimuat ulang.'),
     ...bagian('Peta kartu', 'Panel kecil di kiri bawah berisi miniatur seluruh papan (blok abu-abu), dengan kotak berbingkai yang menunjukkan area yang sedang tampak di layar. Klik atau seret di peta untuk berpindah. Klik judulnya untuk melipat panel. Panel hilang otomatis bila seluruh papan sudah muat di satu layar, dan tidak tampil di layar HP.'),
-    ...bagian('Menghapus kartu', 'Pembuat kartu atau balasan melihat tombol kecil Hapus di kartunya sendiri; dosen melihatnya di semua kartu dan balasan. Klik Hapus, lalu klik Ya untuk memastikan (Batal untuk membatalkan). Bila kartu utama dihapus, semua balasan di dalamnya, termasuk balasan orang lain, ikut terhapus, begitu pula suara, pilihan polling, dan garis sambungan ke kartu itu. Polling juga bisa dihapus oleh pembuatnya. Kartu bisa dihapus kapan saja. Kartu yang dihapus tidak bisa dikembalikan dari tampilan ini; salinannya disimpan pengelola di sheet Arsip.'),
+    ...bagian('Menghapus kartu', 'Pembuat kartu atau balasan melihat tombol hitam ✕ (Hapus) di sebelah kiri tombol Balas pada kartunya sendiri; dosen melihatnya di semua kartu, balasan, dan polling. Arahkan kursor ke tombol untuk melihat keterangannya. Klik ✕, lalu klik Ya untuk memastikan (Batal untuk membatalkan). Bila kartu utama dihapus, semua balasan di dalamnya, termasuk balasan orang lain, ikut terhapus, begitu pula suara, pilihan polling, dan garis sambungan ke kartu itu. Polling juga bisa dihapus oleh pembuatnya. Kartu bisa dihapus kapan saja. Kartu yang dihapus tidak bisa dikembalikan dari tampilan ini; salinannya disimpan pengelola di sheet Arsip.'),
     ...bagian('Polling', 'Kartu merah bertanda POLLING berisi satu pertanyaan dengan 2 sampai 5 pilihan. Semua akun terdaftar yang sudah masuk boleh memilih: klik satu pilihan (satu akun satu pilihan), klik pilihan lain untuk mengganti, atau klik pilihan yang sama lagi untuk membatalkan. Hasil berupa persentase dan jumlah suara langsung terlihat oleh semua orang, juga oleh yang belum masuk. Tiap polling punya hitung mundur sendiri di bagian bawah kartu; setelah selesai pilihan terkunci dan pilihan terbanyak diberi bingkai. Polling yang sedang berjalan selalu di posisi pertama, hanya satu polling berjalan pada satu waktu, warnanya merah di semua tampilan (juga monokrom), tidak bisa dibalas, dan bisa disambungkan seperti kartu biasa. Polling hanya bisa dibuat oleh dosen: setelah masuk, tombol merah di ujung kanan deretan bentuk di bawah layar membuka kartu pembuat polling (pertanyaan, pilihan, dan lama polling: 1 jam, 6 jam, 1 hari, 3 hari, atau 7 hari). Polling ikut dikosongkan oleh reset mingguan.'),
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
@@ -1640,6 +1651,7 @@ function statMulai() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) hadir(); });
 }
 function render() {
+  { const tp = document.getElementById('tip'); if (tp) tp.hidden = true; }
   titikFoto(); titikLacak(900);
   const dek = document.getElementById('dek'); dek.innerHTML = '';
   dek.classList.toggle('rapi', rapi);
@@ -1694,6 +1706,25 @@ function tickTimer() {
   });
   if (habis && !sedangMengetik()) render();   // polling baru saja selesai: kunci pilihan
 }
+
+/* ================== KETERANGAN TOMBOL (muncul saat kursor diarahkan) ================== */
+(function tipMulai() {
+  const tip = document.getElementById('tip');
+  let aktif = null;
+  const tutup = () => { aktif = null; tip.hidden = true; };
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType !== 'mouse') return;
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if (!el || el === aktif) return;
+    aktif = el; tip.textContent = el.dataset.tip; tip.hidden = false;
+    const r = el.getBoundingClientRect();
+    tip.style.left = Math.max(40, Math.min(innerWidth - 40, r.left + r.width / 2)) + 'px';
+    tip.style.top = (r.top < 40 ? r.bottom + 34 : r.top - 6) + 'px';
+  });
+  document.addEventListener('pointerout', e => { if (aktif && !(e.relatedTarget && aktif.contains(e.relatedTarget))) tutup(); });
+  document.addEventListener('pointerdown', tutup, true);
+  addEventListener('scroll', tutup, { passive: true });
+})();
 
 /* ================== PETA KARTU (MINIMAP) ================== */
 function petaMulai() {
