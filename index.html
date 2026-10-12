@@ -493,7 +493,11 @@ let statKartu = 0, statBalasan = 0, hadirData = null;   // angka untuk kotak Sta
 let rapi = false;             // mode Susun rapi (pilihan tampilan, tersimpan di browser ini saja)
 let komposBuka = false;       // kartu penulis baru baru tampil setelah memilih bentuk di atas
 let draft = {};               // isi kartu penulis yang belum terkirim
-let token = sessionStorage.getItem('tok') || '';
+/* Token Google hanya berlaku 1 jam (aturan Google). Disimpan di localStorage agar tidak hilang saat tab ditutup, lalu diperbarui diam-diam sebelum habis. */
+function ambilTok() { try { return localStorage.getItem('tok') || sessionStorage.getItem('tok') || ''; } catch (e) { return ''; } }
+function simpanTok(t) { try { localStorage.setItem('tok', t); localStorage.setItem('deck-ingat', '1'); } catch (e) { try { sessionStorage.setItem('tok', t); } catch (e2) {} } }
+function hapusTok(lupa) { try { localStorage.removeItem('tok'); sessionStorage.removeItem('tok'); if (lupa) localStorage.removeItem('deck-ingat'); } catch (e) {} }
+let token = ambilTok();
 
 /* ================== UTIL ================== */
 const WARNA = ['#000000', '#ffffff', '#1e3a8a', '#991b1b', '#166534'];   // maksimum 5; harus sama dengan WARNA di Kode.gs
@@ -683,10 +687,25 @@ function initGoogle() {
   if (!window.google || !google.accounts) return setTimeout(initGoogle, 300);
   google.accounts.id.initialize({
     client_id: CONFIG.GOOGLE_CLIENT_ID,
-    callback: async r => { token = r.credential; sessionStorage.setItem('tok', token); await sapa(); }
+    callback: async r => { token = r.credential; simpanTok(token); await sapa(); },
+    auto_select: true, cancel_on_tap_outside: false, use_fedcm_for_prompt: true
   });
   renderLogin();
+  if (!tokenHidup() && ingat()) segarkan();
 }
+function ingat() { try { return localStorage.getItem('deck-ingat') === '1'; } catch (e) { return false; } }
+let segarTerakhir = 0;
+// minta token baru tanpa tampilan (berhasil bila akun masih masuk di Google dan pernah disetujui)
+function segarkan() {
+  if (!window.google || !google.accounts || Date.now() - segarTerakhir < 20000) return;
+  segarTerakhir = Date.now();
+  try { google.accounts.id.prompt(); } catch (e) {}
+}
+function sisaToken() {
+  try { const p = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); return p.exp * 1000 - Date.now(); } catch (e) { return -1; }
+}
+setInterval(() => { if (ingat() && (!token || sisaToken() < 10 * 60000)) segarkan(); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ingat() && (!token || sisaToken() < 10 * 60000)) segarkan(); });
 function namaAkun() {
   try {
     const p = JSON.parse(decodeURIComponent(escape(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
@@ -716,12 +735,12 @@ async function sapa() {
   renderLogin(); renderAlat(); render(); hadir();
 }
 function keluar(diam) {
-  token = ''; sessionStorage.removeItem('tok'); sayaVote = {}; milikSaya = new Set(); seret = null; sayaPilih = {}; segelSaya = {}; gameBuka = null; dosenSaya = false; statusAkun = 'aktif'; komposBuka = false; pollBuka = false; hapusKonfirm = null;
+  token = ''; hapusTok(!diam); if (!diam) { try { google.accounts.id.disableAutoSelect(); } catch (e) {} } sayaVote = {}; milikSaya = new Set(); seret = null; sayaPilih = {}; segelSaya = {}; gameBuka = null; dosenSaya = false; statusAkun = 'aktif'; komposBuka = false; pollBuka = false; hapusKonfirm = null;
   renderLogin(); if (!diam) toast('Anda sudah keluar.'); renderAlat(); render();
 }
 function butuhLogin() {
   if (tokenHidup()) return true;
-  token = ''; renderLogin(); toast('Masuk dengan akun Google dulu.'); return false;
+  token = ''; renderLogin(); if (ingat()) { segarkan(); toast('Sesi sedang diperbarui, coba lagi sebentar lagi.'); } else toast('Masuk dengan akun Google dulu.'); return false;
 }
 
 /* ================== AKSI ================== */
@@ -2122,7 +2141,7 @@ function petaMulai() {
   if (!siap(CONFIG.SCRIPT_URL) || !siap(CONFIG.GOOGLE_CLIENT_ID) || (!siap(CONFIG.CSV_URL) && !siap(CONFIG.SCRIPT_URL))) {
     b.append(h('div', {}, 'Konfigurasi belum lengkap: isi SCRIPT_URL, CSV_URL, dan GOOGLE_CLIENT_ID di bagian CONFIG pada index.html.'));
   }
-  if (!tokenHidup()) { token = ''; sessionStorage.removeItem('tok'); }
+  if (!tokenHidup()) { token = ''; hapusTok(false); }
   renderAlat(); render(); muat();
   tickTimer(); setInterval(tickTimer, 1000);
   setInterval(() => { const el = document.getElementById('timer'); if (el) el.textContent = '[' + teksReset(sisaReset(waktuServer())) + ']'; }, 250);   // angka detik tidak melompat
