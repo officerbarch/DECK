@@ -1254,6 +1254,7 @@ function isiBantuan() {
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
     ...bagian('Tampilan', 'Tombol ikon di kanan atas (di samping tombol ?) membuka pilihan: ☀ terang, ☾ gelap, ○ monokrom terang, ● monokrom gelap, dan ⊘ untuk mematikan atau menyalakan latar tanda ^ (lihat "Latar tanda ^"). Mode monokrom hanya memakai hitam dan putih (kontras penuh): kartu dan balasan saling berlawanan warna. Pilihan pertama mengikuti pengaturan perangkatmu, lalu diingat di browser ini dan tidak mengubah isi kartu.'),
+    ...bagian('Latar spektrum', 'Tombol ≋ di menu tampilan mengganti latar tanda ^ dengan latar spektrum: pendar warna pelangi yang mengalir pelan, tertarik ke arah pointer dan ke kartu yang sedang digeser, dan warnanya bergeser sedikit mengikuti posisi pointer. Di mode monokrom pendarnya abu-abu. Klik ≋ lagi untuk kembali ke tanda ^, atau pakai ⊘ untuk mematikan latar. Di pengaturan "kurangi gerakan" latar ini tidak bergerak. Pilihanmu diingat di browser ini dan tidak ikut terfoto.'),
     ...bagian('Latar tanda ^', 'Tanda ^ kecil di latar menghadap atas; di dekat kursor (atau titik sentuhan di HP) tanda tertarik seperti magnet dan berputar menghadap kursor (atau titik sentuhan di HP). Kartu yang sedang bergerak juga menarik tanda di sekitarnya. Ini hanya hiasan. Kalau terasa mengganggu atau perangkatmu terasa berat, matikan lewat tombol ⊘ di pilihan tampilan (tombol ikon di samping tombol ?); klik ⊘ lagi untuk menyalakannya kembali. Pilihan ini terpisah dari tema terang, gelap, dan monokrom, dan diingat di browser ini.'),
     ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
     ...bagian('Reset mingguan', 'Papan di-reset seminggu sekali, setiap Senin 00.00 WIB; isinya diarsipkan oleh pengelola. Hitung mundur di samping judul, misalnya [- 3 hari : 05 jam], menunjukkan sisa waktu tempel catatan minggu ini.'),
@@ -1377,7 +1378,7 @@ function gambarBingkai() {
 /* ---------- Latar tanda ^ : semua menghadap atas; di dekat kursor tertarik seperti magnet dan berputar menghadap kursor ---------- */
 const TITIK = { jarak: 17, warna: '#9a9a9a', radiusDorong: 250, dorong: 24, radius: 420, kecepatan: .24, tinggi: 1.8, sayap: 2.4, tebal: 1.1 };   // ^ diperkecil 25%, jarak dirapatkan sebanding
 const PUSAT = { jangkauan: 120, kuat: 48, peka: 1.5, susut: .9 };   // caret menjauhi kartu yang sedang bergerak
-const titik = { push: new Map(), act: [], lacak: 0, lintas: 0, kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false, t0: 0 };
+const titik = { push: new Map(), act: [], lacak: 0, lintas: 0, kanvas: null, ctx: null, mx: -9999, my: -9999, geser: new Map(), jalan: false, kurang: false, t0: 0, mode: 'caret', gelap: false, mono: false };
 function titikUkuran() {
   const k = titik.kanvas, d = window.devicePixelRatio || 1;
   k.width = Math.round(innerWidth * d); k.height = Math.round(innerHeight * d);
@@ -1441,6 +1442,38 @@ function titikPelacak(now) {
   }
   titik.act = aktif;
 }
+/* ---------- Latar spektrum: pendar warna pelangi yang mengalir pelan, tertarik ke pointer dan kartu yang bergerak ---------- */
+const SPEK = { n: 8, ikut: .2, tarikKartu: .3, lembam: .02, laju: 4, geserHue: 60 };
+const spek = { t: 0, sp: null, blob: [] };
+function spektrumGambar(now, dt) {
+  const c = titik.ctx, W = innerWidth, H = innerHeight;
+  if (!titik.kurang) spek.t += dt / 1000;
+  const t = spek.t, f = 1 - Math.pow(1 - SPEK.lembam, dt / 16.7);
+  const ada = titik.mx > -9000;
+  // pointer dihaluskan supaya pendar tidak melompat
+  if (ada) { if (!spek.sp) spek.sp = { x: titik.mx, y: titik.my }; else { spek.sp.x += (titik.mx - spek.sp.x) * f * 2; spek.sp.y += (titik.my - spek.sp.y) * f * 2; } }
+  c.clearRect(0, 0, W, H);
+  const R = Math.max(W, H) * .3, S = titik.mono ? 0 : 78;
+  const huePtr = spek.sp ? (spek.sp.x / W) * SPEK.geserHue : 0;
+  for (let i = 0; i < SPEK.n; i++) {
+    const w1 = 6.283 / (50 + i * 7), w2 = 6.283 / (63 + i * 5), ph = i * 2.4;
+    const hx = W * (.5 + .4 * Math.sin(t * w1 + ph)), hy = H * (.5 + .4 * Math.cos(t * w2 + ph * 1.7));
+    let tx = hx, ty = hy;
+    if (ada && spek.sp) { tx += (spek.sp.x - hx) * SPEK.ikut; ty += (spek.sp.y - hy) * SPEK.ikut; }
+    for (const p of titik.act) { const cx = (p.l + p.r) / 2, cy = (p.t + p.b) / 2, k = SPEK.tarikKartu * Math.min(1, p.k); tx += (cx - tx) * k; ty += (cy - ty) * k; }
+    let b = spek.blob[i]; if (!b) b = spek.blob[i] = { x: tx, y: ty };
+    if (titik.kurang) { b.x = tx; b.y = ty; } else { b.x += (tx - b.x) * f; b.y += (ty - b.y) * f; }
+    const hue = ((i / SPEK.n) * 360 + t * SPEK.laju + huePtr) % 360;
+    const r = R * (.85 + .25 * Math.sin(t * w1 * 2 + ph));
+    const g = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
+    const L = titik.gelap ? 48 : 70, A = titik.gelap ? .3 : .42;
+    g.addColorStop(0, 'hsla(' + hue.toFixed(1) + ',' + S + '%,' + L + '%,' + A + ')');
+    g.addColorStop(1, 'hsla(' + hue.toFixed(1) + ',' + S + '%,' + L + '%,0)');
+    c.fillStyle = g; c.fillRect(b.x - r, b.y - r, r * 2, r * 2);
+  }
+  titik.jalan = !titik.kurang;
+  if (titik.jalan) requestAnimationFrame(titikGambar);
+}
 function titikGambar(now) {
   if (titik.mati) { titik.jalan = false; return; }
   const c = titik.ctx, J = TITIK.jarak, H = TITIK.tinggi, S = TITIK.sayap;
@@ -1448,6 +1481,7 @@ function titikGambar(now) {
   const dt = Math.max(8, Math.min(50, now - (titik.t0 || now - 16.7))); titik.t0 = now;
   const f = 1 - Math.pow(1 - TITIK.kecepatan, dt / 16.7);
   titikPelacak(now);
+  if (titik.mode === 'spektrum') { titik.geser.clear(); return spektrumGambar(now, dt); }
   c.clearRect(0, 0, innerWidth, innerHeight);
   c.strokeStyle = TITIK.warna; c.lineWidth = TITIK.tebal; c.lineCap = c.lineJoin = 'round';
   const k0 = Math.floor(scrollY / J) - 1, k1 = Math.ceil((scrollY + innerHeight) / J) + 1;
@@ -1870,6 +1904,15 @@ function petaMulai() {
   });
   // tombol ✕: matikan / nyalakan latar tanda ^ (terpisah dari pilihan tema)
   const bx = document.createElement('button'); bx.type = 'button'; bx.textContent = '⊘'; bx.setAttribute('role', 'menuitemcheckbox'); menu.appendChild(bx);
+  // tombol ≋: ganti latar tanda ^ dengan latar spektrum
+  const bs = document.createElement('button'); bs.type = 'button'; bs.textContent = '≋'; bs.setAttribute('role', 'menuitemcheckbox'); menu.insertBefore(bs, bx);
+  const modeLatar = m => {
+    titik.mode = m; bs.classList.toggle('aktif', m === 'spektrum'); bs.setAttribute('aria-checked', m === 'spektrum' ? 'true' : 'false');
+    const nm = m === 'spektrum' ? 'Latar spektrum (aktif): klik untuk kembali ke tanda ^' : 'Latar spektrum'; bs.title = nm; bs.setAttribute('aria-label', nm);
+    if (titik.ctx) { titik.ctx.clearRect(0, 0, innerWidth, innerHeight); titikMinta(); }
+  };
+  let mode = 'caret';
+  try { if (localStorage.getItem('deck-mode') === 'spektrum') mode = 'spektrum'; } catch (e) {}
   const latar = mati => {
     titik.mati = mati;
     if (mati) root.dataset.latar = 'mati'; else delete root.dataset.latar;
@@ -1879,7 +1922,8 @@ function petaMulai() {
   };
   let mati = false;
   try { mati = localStorage.getItem('deck-latar') === 'mati'; } catch (e) {}
-  latar(mati);
+  latar(mati); modeLatar(mode);
+  bs.addEventListener('click', () => { mode = mode === 'spektrum' ? 'caret' : 'spektrum'; try { localStorage.setItem('deck-mode', mode); } catch (e) {} if (mati) { mati = false; try { localStorage.setItem('deck-latar', 'hidup'); } catch (e) {} latar(false); } modeLatar(mode); tutup(); });
   bx.addEventListener('click', () => { mati = !mati; try { localStorage.setItem('deck-latar', mati ? 'mati' : 'hidup'); } catch (e) {} latar(mati); tutup(); });
   const tutup = () => { menu.hidden = true; tb.setAttribute('aria-expanded', 'false'); };
   const pasang = () => {
@@ -1889,7 +1933,7 @@ function petaMulai() {
     const cur = PIL.find(x => x[0] === t);
     tb.textContent = cur[1]; tb.title = 'Tampilan: ' + cur[2];
     PIL.forEach((x, i) => { tombol[i].classList.toggle('aktif', x[0] === t); tombol[i].setAttribute('aria-checked', x[0] === t ? 'true' : 'false'); });
-    TITIK.warna = gelap ? '#5c5c5c' : '#9a9a9a';
+    TITIK.warna = gelap ? '#5c5c5c' : '#9a9a9a'; titik.gelap = gelap; titik.mono = mono;
     dispatchEvent(new Event('resize'));   // gambar ulang latar
   };
   tb.addEventListener('click', e => { e.stopPropagation(); const buka = menu.hidden; menu.hidden = !buka; tb.setAttribute('aria-expanded', buka ? 'true' : 'false'); });
