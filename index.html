@@ -69,7 +69,7 @@
   #login { display:flex; align-items:center; gap:10px; font-size:14px; min-height:40px; }
 
   /* deretan tombol bentuk */
-  #alat { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:14px;
+  #alat { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:18px;
           padding:10px 16px calc(10px + env(safe-area-inset-bottom)); font-size:14px; pointer-events:none; }
   #alat > * { pointer-events:auto; }
   #bentuk-baris { display:contents; }
@@ -77,7 +77,7 @@
   .daftar-kotak { display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center; background:var(--h); color:var(--p); padding:8px 14px; font-size:14px; }
   .daftar-kotak .btn { background:var(--p); color:var(--h); border-color:var(--p); }
   @media (max-width:640px) {   /* HP: deretan bentuk tetap di tengah bawah */
-    #alat { gap:6px; padding-left:8px; padding-right:8px; }
+    #alat { gap:10px; padding-left:8px; padding-right:8px; }
     #alat .ikon:not(.kecil) { width:28px; height:28px; }
     .petunjuk { order:3; }
   }
@@ -275,6 +275,7 @@
     font:500 14px/1 "Google Sans", Roboto, Arial, sans-serif !important; letter-spacing:.2px; padding:0 14px !important; min-width:40px !important;
     display:inline-flex; align-items:center; justify-content:center; text-decoration:none; transition:background .15s, box-shadow .15s; }
   header .kanan select, header #urut { padding:0 10px !important; }
+  header #btn-tema, header #btn-suara, header #btn-foto, header #btn-help { width:40px; padding:0 !important; }
   header .kanan .btn:hover:not(:disabled), header .kanan select:hover { background:#f8f9fa !important; box-shadow:0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); }
   header #btn-akun { max-width:160px; display:inline-block; line-height:38px; }
   header #btn-suara.mati { opacity:.55; }
@@ -411,10 +412,11 @@
   .game-info { font-size:13px; margin:6px 0; color:var(--abu); }
   .segel .label-segel { display:inline-block; background:#111; color:#fff; font:700 11px Arial, sans-serif; letter-spacing:.04em; padding:3px 8px; margin:12px 0 6px; }
   .segel .garis-semu { height:9px; margin:8px 0; border-radius:2px; background:currentColor; opacity:.5; }
+  .peran { padding:6px 12px; font-size:12px; opacity:.75; white-space:nowrap; border-bottom:1px solid currentColor; }
   .tmr-pilih { display:flex; align-items:center; gap:8px; font-size:14px; margin:6px 0; }
   .tmr-pilih select { font:inherit; padding:4px 8px; }
   .item.padam { opacity:0; transition:opacity .6s; }
-  .ikon.b-waktu { width:56px; height:42px; margin:0; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z M6 10.1h1.8V8.3h1.4v1.8H11v1.4H9.2v1.8H7.8v-1.8H6z M15 11.1a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z M18 8.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z M6 10.1h1.8V8.3h1.4v1.8H11v1.4H9.2v1.8H7.8v-1.8H6z M15 11.1a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z M18 8.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z'/%3E%3C/svg%3E") center/contain no-repeat; }   /* ikon kontroler game (kartu timer) */
+  .ikon.b-waktu { width:44px; height:34px; margin:0; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z M6 10.1h1.8V8.3h1.4v1.8H11v1.4H9.2v1.8H7.8v-1.8H6z M15 11.1a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z M18 8.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z M6 10.1h1.8V8.3h1.4v1.8H11v1.4H9.2v1.8H7.8v-1.8H6z M15 11.1a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z M18 8.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z'/%3E%3C/svg%3E") center/contain no-repeat; }   /* ikon kontroler game (kartu timer) */
   .ikon.kecil.b-waktu { width:40px; height:30px; }
   #tip { position:fixed; z-index:120; padding:5px 9px; font:12px Arial, sans-serif; color:#fff; background:#111; border:1px solid rgba(255,255,255,.55); border-radius:3px; pointer-events:none; white-space:nowrap; transform:translate(-50%, -100%); }
   #tip[hidden] { display:none; }
@@ -475,7 +477,7 @@ let dosenSaya = false;        // akun yang masuk adalah dosen (boleh membuat pol
 let pollBuka = false;         // kartu penulis polling sedang terbuka
 let pollDraft = { u: '', q: '', o: ['', ''], jam: 24 };
 const MAKS_TANYA = 120, MAKS_OPSI = 50, MAKS_OPSI_N = 5;   // harus sama dengan Kode.gs
-const DURASI_TIMER = [[1, '1 jam'], [6, '6 jam'], [24, '1 hari'], [72, '3 hari']];   // harus sama dengan DURASI_KARTU di Kode.gs
+const DURASI_TIMER = [[30, '30 detik'], [60, '1 menit'], [90, '1 menit 30 detik'], [120, '2 menit'], [150, '2 menit 30 detik'], [180, '3 menit']];   // harus sama dengan DURASI_KARTU di Kode.gs
 const DURASI = [[1, '1 jam'], [6, '6 jam'], [24, '1 hari'], [72, '3 hari'], [168, '7 hari']];
 let dekBuka = null;           // id post yang tumpukan balasannya sedang terbuka (hanya satu)
 let balasKe = null;           // id balasan yang sedang dibalas (null = membalas post induk)
@@ -555,7 +557,7 @@ const getWarna = () => cekWarna(localStorage.getItem('deck_warna'));
 const getKartu = () => cekKartu(localStorage.getItem('deck_kartu'));
 const getBentuk = () => { const b = cekBentuk(localStorage.getItem('deck_bentuk')); return b === 'waktu' ? 'persegi' : b; };
 function ambilDraft(kunci) {
-  return draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu(), b: getBentuk(), j: 24 };
+  return draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu(), b: getBentuk(), j: 60 };
 }
 function ubahBentuk(d, b) {
   d.b = b; d.t = d.t.slice(0, BENTUK[b].maks);
@@ -697,7 +699,7 @@ function renderLogin() {
   const el = document.getElementById('login'); el.innerHTML = '';
   if (tokenHidup()) {
     const nm = namaAkun();
-    const menu = h('div', { id: 'menu-akun', role: 'menu', hidden: '' }, h('button', { type: 'button', role: 'menuitem', onclick: () => { menu.hidden = true; keluar(); } }, 'Keluar'));
+    const menu = h('div', { id: 'menu-akun', role: 'menu', hidden: '' }, h('div', { class: 'peran' }, dosenSaya ? 'Peran: dosen \u2713 (bisa membuat polling)' : 'Peran: akun biasa'), h('button', { type: 'button', role: 'menuitem', onclick: () => { menu.hidden = true; keluar(); } }, 'Keluar'));
     const tb = h('button', { type: 'button', class: 'btn garis', id: 'btn-akun', 'aria-haspopup': 'true', 'aria-expanded': 'false', title: 'Akun: ' + nm,
       onclick: e => { e.stopPropagation(); menu.hidden = !menu.hidden; tb.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true'); } }, nm);
     el.append(h('span', { id: 'akun-wrap' }, tb, menu));
@@ -780,7 +782,7 @@ async function kirim(kunci, parent, btn, ke) {
   if (t.length > BENTUK[d.b].maks) return toast(`Teks terlalu panjang untuk bentuk ini (maks ${BENTUK[d.b].maks}).`);
   btn.disabled = true;
   try {
-    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', membalas: ke ? ke.id : '', warna: d.w, kartu: d.k, bentuk: d.b, jam: d.b === 'waktu' ? d.j : undefined, game: (parent && !ke && d.g && gameBisa(parent)) ? true : undefined });
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', membalas: ke ? ke.id : '', warna: d.w, kartu: d.k, bentuk: d.b, detik: d.b === 'waktu' ? d.j : undefined, game: (parent && !ke && d.g && gameBisa(parent)) ? true : undefined });
     lokal.push(normal(j.post)); milikSaya.add(j.post.id); setUser(u);
     if (j.segel) segelSaya[j.post.id] = j.segel;
     if (d.b !== 'waktu') { localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); localStorage.setItem('deck_bentuk', d.b); }
@@ -992,7 +994,12 @@ function pilihBentukBaru(b) {
 async function daftarAkun(btn) {
   if (!butuhLogin()) return;
   btn.disabled = true;
-  try { const j = await panggil({ aksi: 'daftar' }); statusAkun = j.status || 'aktif'; toast('Terdaftar. Silakan menulis kartu.'); }
+  try {
+    const j = await panggil({ aksi: 'daftar' }); statusAkun = j.status || 'aktif';
+    const sy = await panggil({ aksi: 'saya' });   // muat suara, kartu milik, dan peran dosen yang tadi belum terbaca
+    sayaVote = sy.votes || {}; milikSaya = new Set(sy.milik || []); sayaPilih = sy.pilihan || {}; segelSaya = sy.segel || {}; dosenSaya = !!sy.dosen;
+    renderLogin(); toast('Terdaftar. Silakan menulis kartu.');
+  }
   catch (e) { toast(e.message); }
   renderAlat(); render();
 }
@@ -1280,7 +1287,12 @@ function gameCek() {
 const IKON_JAM = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>';
 function ikonSvg(svg) { const e = document.createElement('span'); e.style.display = 'inline-flex'; e.innerHTML = svg; return e; }
 function ikonJam() { const e = document.createElement('span'); e.style.display = 'inline-flex'; e.innerHTML = IKON_JAM; return e; }
-const sisaKartu = habis => { const ms = habis - waktuServer(); return ms > 0 ? 'sisa ' + teksTimer(ms) : 'waktu habis'; };
+const sisaKartu = habis => {
+  const ms = habis - waktuServer(); if (ms <= 0) return 'waktu habis';
+  if (ms >= 3600000) return 'sisa ' + teksTimer(ms);   // kartu timer versi lama (jam/hari)
+  const d = Math.ceil(ms / 1000), m = Math.floor(d / 60);
+  return 'sisa ' + (m ? m + ':' + String(d % 60).padStart(2, '0') : d + '"');
+};
 function kartuUtama(p, balasan) {
   balasan = susunBalasan(balasan);
   const lain = p.bentuk !== 'persegi' && p.bentuk !== 'waktu';
@@ -1367,7 +1379,7 @@ function isiBantuan() {
     ...bagian('Menggeser dan zoom', 'Di mode Acak, papan selebar minimal 6 kolom (layar yang lebih lebar menampilkan lebih banyak kolom) dan dibuka dari tengah. Geser ke samping dengan menyeret latar kosong memakai mouse, Shift + gulir, atau dua jari di trackpad; di HP cukup geser dengan jari. Zoom lewat tombol − dan + di panel Peta kartu, atau Ctrl + gulir (cubit di trackpad), dari 40% sampai 160%; klik angka persennya untuk kembali ke 100%. Memperkecil zoom membantu melihat banyak kartu dan garis koneksi sekaligus. Mode Rapi selalu mengikuti lebar layar. Zoom tidak diingat saat halaman dimuat ulang.'),
     ...bagian('Peta kartu', 'Panel kecil di kiri bawah berisi miniatur seluruh papan (blok abu-abu), dengan kotak berbingkai yang menunjukkan area yang sedang tampak di layar. Klik atau seret di peta untuk berpindah. Klik judulnya untuk melipat panel. Panel hilang otomatis bila seluruh papan sudah muat di satu layar, dan tidak tampil di layar HP.'),
     ...bagian('Menghapus kartu', 'Pembuat kartu atau balasan melihat tombol hitam ✕ (Hapus) di sebelah kiri tombol Balas pada kartunya sendiri; dosen melihatnya di semua kartu, balasan, dan polling. Arahkan kursor ke tombol untuk melihat keterangannya. Klik ✕, lalu klik Ya untuk memastikan (Batal untuk membatalkan). Bila kartu utama dihapus, semua balasan di dalamnya, termasuk balasan orang lain, ikut terhapus, begitu pula suara, pilihan polling, dan garis sambungan ke kartu itu. Polling juga bisa dihapus oleh pembuatnya. Kartu bisa dihapus kapan saja. Kartu yang dihapus tidak bisa dikembalikan dari tampilan ini; salinannya disimpan pengelola di sheet Arsip.'),
-    ...bagian('Kartu timer', 'Kartu persegi panjang merah dengan ikon jam, untuk pengumuman atau pertanyaan yang hanya berlaku sebentar. Klik tombol persegi panjang berikon jam di deretan bentuk (bawah layar), tulis pesan (maks 120 huruf), pilih "Kartu hilang setelah" (1 jam, 6 jam, 1 hari, atau 3 hari), lalu Kirim. Selama waktunya berjalan, semua orang bisa membaca kartu itu dan sisa waktunya tampil di bagian atas kartu. Seperti kartu biasa, kartu timer bisa dibalas, dihapus, disambungkan dengan garis, dan diberi ↑ ↓. Saat waktunya habis, kartu memudar dan hilang dari papan bersama semua balasannya, suara, dan sambungannya. Balasan tidak bisa berupa kartu timer. Warnanya merah di semua tampilan (juga monokrom). Salinan kartu yang sudah habis disimpan pengelola di sheet Arsip.'),
+    ...bagian('Kartu timer', 'Kartu persegi panjang merah dengan hitung mundur, untuk pengumuman atau pertanyaan yang hanya berlaku sebentar. Klik tombol berikon kontroler game di ujung kanan deretan bentuk (bawah layar), tulis pesan (maks 120 huruf), pilih "Kartu hilang setelah" (30 detik sampai 3 menit, kelipatan 30 detik), lalu Kirim. Selama waktunya berjalan, semua orang bisa membaca kartu itu dan sisa waktunya tampil di bagian atas kartu. Seperti kartu biasa, kartu timer bisa dibalas, dihapus, disambungkan dengan garis, dan diberi ↑ ↓. Saat waktunya habis, kartu memudar dan hilang dari papan bersama semua balasannya, suara, dan sambungannya. Balasan tidak bisa berupa kartu timer. Warnanya merah di semua tampilan (juga monokrom). Salinan kartu yang sudah habis disimpan pengelola di sheet Arsip.'),
     ...bagian('Game: kartu game', 'Penanya mengubah pertanyaannya jadi permainan. Di kartu pertanyaanmu sendiri (kartu biasa apa pun, selain polling), klik tombol berikon stik game (kontroler) hitam di sebelah tombol Balas, lalu pilih lama ronde: 30", 60", atau 120" (detik). Kartu menampilkan label GAME dengan hitung mundur. Selama ronde, orang lain menjawab lewat tombol Balas dan membiarkan kotak "Kartu game" tercentang: jawabannya jadi kartu bergembok yang isinya hanya bisa dilihat pembuatnya, sehingga tidak ada yang bisa menyontek (penanya pun belum melihat). Satu akun satu kartu game per ronde, penanya tidak ikut menjawab, dan satu kartu hanya bisa memulai satu ronde. Kartu game tersegel tidak bisa dibalas atau diberi ↑ ↓. Saat waktu habis semua kartu game terbuka serentak, tumpukan membuka sendiri, dan kartunya menjadi balasan biasa. Balasan biasa (tanpa centang) selama ronde tetap tampil langsung. Isi kartu game yang masih tersegel disimpan di sheet privat Segel; pengelola yang membuka sheet itu bisa membacanya.'),
     ...bagian('Polling', 'Kartu oranye bertanda POLLING berisi satu pertanyaan dengan 2 sampai 5 pilihan. Semua akun terdaftar yang sudah masuk boleh memilih: klik satu pilihan (satu akun satu pilihan), klik pilihan lain untuk mengganti, atau klik pilihan yang sama lagi untuk membatalkan. Hasil berupa persentase dan jumlah suara langsung terlihat oleh semua orang, juga oleh yang belum masuk. Tiap polling punya hitung mundur sendiri di bagian bawah kartu; setelah selesai pilihan terkunci dan pilihan terbanyak diberi bingkai. Polling yang sedang berjalan selalu di posisi pertama, hanya satu polling berjalan pada satu waktu, warnanya oranye di semua tampilan (juga monokrom), tidak bisa dibalas, dan bisa disambungkan seperti kartu biasa. Polling hanya bisa dibuat oleh dosen: setelah masuk, tombol polling di ujung kanan deretan bentuk di bawah layar membuka kartu pembuat polling (pertanyaan, pilihan, dan lama polling: 1 jam, 6 jam, 1 hari, 3 hari, atau 7 hari). Polling ikut dikosongkan oleh reset harian.'),
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
