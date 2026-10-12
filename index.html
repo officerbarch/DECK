@@ -73,6 +73,9 @@
           padding:10px 16px calc(10px + env(safe-area-inset-bottom)); font-size:14px; pointer-events:none; }
   #alat > * { pointer-events:auto; }
   #bentuk-baris { display:contents; }
+  #bentuk-baris.belum > .ikon, #bentuk-baris.belum > .petunjuk { display:none; }
+  .daftar-kotak { display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center; background:var(--h); color:var(--p); padding:8px 14px; font-size:14px; }
+  .daftar-kotak .btn { background:var(--p); color:var(--h); border-color:var(--p); }
   @media (max-width:640px) {   /* HP: deretan bentuk tetap di tengah bawah */
     #alat { gap:6px; padding-left:8px; padding-right:8px; }
     #alat .ikon:not(.kecil) { width:28px; height:28px; }
@@ -424,6 +427,7 @@ let sayaPilih = {};           // pilihan polling akun ini: { idKartu: indeksPili
 let hapusKonfirm = null;      // id kartu yang sedang meminta konfirmasi hapus
 let ovHapus = {};             // id kartu yang baru dihapus di sini (menutupi cache CSV sebentar)
 let ovPoll = {};              // hasil polling terbaru dari server setelah saya memilih
+let statusAkun = 'aktif';     // 'aktif' | 'baru' (belum terdaftar) | 'blokir'
 let dosenSaya = false;        // akun yang masuk adalah dosen (boleh membuat polling)
 let pollBuka = false;         // kartu penulis polling sedang terbuka
 let pollDraft = { u: '', q: '', o: ['', ''], jam: 24 };
@@ -597,7 +601,7 @@ const urutKartu = () => urutan === 'terbaru' ? (a, b) => new Date(b.waktu) - new
 /* ================== PANGGIL APPS SCRIPT ================== */
 const PESAN = {
   LOGIN: 'Sesi login habis. Silakan masuk lagi dengan Google.',
-  DILARANG: 'Akun Google Anda tidak ada dalam daftar yang boleh posting.'
+  DILARANG: 'Akun belum terdaftar atau sedang diblokir.'
 };
 async function panggil(isi) {
   if (!siap(CONFIG.SCRIPT_URL)) throw new Error('SCRIPT_URL belum diisi.');
@@ -655,12 +659,12 @@ function renderLogin() {
   }
 }
 async function sapa() {
-  try { const j = await panggil({ aksi: 'saya' }); sayaVote = j.votes || {}; milikSaya = new Set(j.milik || []); sayaPilih = j.pilihan || {}; dosenSaya = !!j.dosen; toast('Berhasil masuk.'); }
+  try { const j = await panggil({ aksi: 'saya' }); sayaVote = j.votes || {}; milikSaya = new Set(j.milik || []); sayaPilih = j.pilihan || {}; dosenSaya = !!j.dosen; statusAkun = j.status || 'aktif'; toast(statusAkun === 'baru' ? 'Berhasil masuk. Klik Daftar untuk mulai menulis.' : statusAkun === 'blokir' ? 'Akun ini diblokir.' : 'Berhasil masuk.'); }
   catch (e) { toast(e.message); keluar(true); }
   renderLogin(); renderAlat(); render(); hadir();
 }
 function keluar(diam) {
-  token = ''; sessionStorage.removeItem('tok'); sayaVote = {}; milikSaya = new Set(); seret = null; sayaPilih = {}; dosenSaya = false; pollBuka = false; hapusKonfirm = null;
+  token = ''; sessionStorage.removeItem('tok'); sayaVote = {}; milikSaya = new Set(); seret = null; sayaPilih = {}; dosenSaya = false; statusAkun = 'aktif'; komposBuka = false; pollBuka = false; hapusKonfirm = null;
   renderLogin(); if (!diam) toast('Anda sudah keluar.'); renderAlat(); render();
 }
 function butuhLogin() {
@@ -934,8 +938,25 @@ function pilihBentukBaru(b) {
   renderAlat(); render();
   if (komposBuka) requestAnimationFrame(() => { const k = document.querySelector('#dek .kompos'); if (k) k.scrollIntoView({ block: 'center', behavior: 'smooth' }); });
 }
+async function daftarAkun(btn) {
+  if (!butuhLogin()) return;
+  btn.disabled = true;
+  try { const j = await panggil({ aksi: 'daftar' }); statusAkun = j.status || 'aktif'; toast('Terdaftar. Silakan menulis kartu.'); }
+  catch (e) { toast(e.message); }
+  renderAlat(); render();
+}
 function renderAlat() {
   const el = document.getElementById('bentuk-baris');
+  const belum = tokenHidup() && statusAkun !== 'aktif';
+  el.classList.toggle('belum', belum);
+  const kd = el.querySelector('.daftar-kotak'); if (kd) kd.remove();
+  if (belum) {
+    komposBuka = false; pollBuka = false;
+    el.append(statusAkun === 'blokir'
+      ? h('div', { class: 'daftar-kotak' }, 'Akun ini diblokir dan tidak bisa menulis. Hubungi administrator.')
+      : h('div', { class: 'daftar-kotak' }, 'Akunmu belum terdaftar.', h('button', { type: 'button', class: 'btn', onclick: e => daftarAkun(e.currentTarget) }, 'Daftar')));
+    return;
+  }
   const aktif = komposBuka ? ambilDraft('baru').b : null;   // (tombol polling dikelola di bawah)
   // tombol dibuat sekali lalu hanya diubah kelasnya, supaya perubahan ukuran teranimasi
   if (!el.querySelector('.ikon')) {
@@ -1222,7 +1243,7 @@ function isiBantuan() {
     ...bagian('Suara', 'Tombol ♪ di kanan atas menyalakan atau mematikan bunyi "dek dek" saat kartu baru muncul atau saat kartumu terkirim, satu nada rendah pendek saat kamu mengklik kartu atau tombol, serta dua nada naik saat dua kartu tersambung (satu nada turun saat sambungan dilepas), dan bunyi desir saat susunan berganti: menyebar untuk Acak, berkumpul untuk Rapi. Browser baru mengizinkan suara setelah kamu mengklik atau mengetuk halaman sekali. Pilihanmu diingat di browser ini.'),
     ...bagian('Foto semua kartu', 'Tombol kamera di kanan atas (di sebelah ♪) memotret semua kartu sekaligus: semua tumpukan dibuka sementara, garis koneksi ikut tergambar dengan warnanya, dan latarnya putih polos. Hasilnya disalin ke clipboard, jadi bisa langsung ditempel (Ctrl/Cmd+V) ke dokumen, chat, atau slide. Kalau clipboard tidak tersedia di browsermu, fotonya diunduh sebagai dekken-kartu.png. Butuh koneksi internet saat dipakai pertama kali. Fotonya tidak dikirim ke mana pun dan tampilanmu kembali seperti semula. Di layar sempit (HP), garis koneksi tidak ikut tergambar.'),
     ...bagian('Akun dan keluar', 'Setelah masuk, namamu tampil di kanan atas. Klik nama itu untuk membuka pilihan Keluar.'),
-    ...bagian('Menulis kartu', 'Untuk menulis kartu, hubungi administrator atau dosen agar akunmu didaftarkan ke Dekken. Setelah terdaftar, masuk dengan akun Google, lalu pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
+    ...bagian('Menulis kartu', 'Masuk dengan akun Google. Bila akunmu belum terdaftar, muncul tombol Daftar di bawah layar: klik sekali saja, tanpa mengisi apa pun, dan emailmu otomatis tercatat. Administrator dapat memblokir akun yang janggal. Setelah terdaftar, pilih bentuk kartu di bilah bawah layar. Isi username (bebas, boleh nama samaran), tulis pesan, pilih warna teks dan warna kartu, lalu Kirim. Batas huruf tergantung bentuk: ' + batas + '. Pilihan warna teks menyesuaikan warna kartu agar tetap terbaca.'),
     ...bagian('Membalas dan tumpukan', 'Kartu yang punya balasan tampil sebagai tumpukan. Klik kartu utama untuk membuka atau menutup tumpukan. Klik tombol hitam berikon panah ↩ (Balas) di kartu utama untuk membalas postingan, atau di sebuah balasan untuk menanggapi balasan itu (muncul keterangan "membalas @nama"). Kotak tulis muncul tepat di bawah kartu yang dibalas.'),
     ...bagian('↑ dan ↓', 'Beri suara naik atau turun. Satu akun satu suara per kartu; klik lagi untuk membatalkan, atau klik arah sebaliknya untuk mengganti. Kartu diurutkan menurut skor (↑ dikurangi ↓), lalu yang terbaru.'),
     ...bagian('Menyambungkan kartu', 'Setiap kartu utama punya satu titik bulat di kanan tombol Balas. Pembuat kartu bisa menyambungkan kartunya ke kartu lain dengan garis (titik di kartu orang lain tampak pudar). Di komputer: tekan titik lalu seret ke kartu tujuan, lepas di atas kartu itu. Di HP: ketuk titik, lalu ketuk kartu tujuan. Ketuk titik lagi atau tekan Esc untuk membatalkan. Satu kartu maksimal 5 sambungan; ulangi cara yang sama ke kartu yang sama untuk menghapusnya. Sambungan hanya untuk kartu utama. Arahkan kursor ke sebuah kartu untuk menebalkan garisnya. Di HP garis tidak digambar; sambungan tampil sebagai label "↔ @nama" di kartu, ketuk untuk melompat ke kartu itu. Warna garis: garis yang kamu buat berwarna sama dengan kartu asalnya (kuning, pink, biru, hijau, atau ungu) dengan tepi gelap tipis agar tetap terbaca, termasuk garis yang sedang kamu seret. Garis buatan orang lain berwarna putih di mode gelap dan hitam di mode terang.'),
