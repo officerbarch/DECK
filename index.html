@@ -529,7 +529,7 @@ const BENTUK = {
   lima:     { label: 'Segi lima', maks: 100, baris: 3 },
   tumpul:   { label: 'Persegi panjang', maks: 120, baris: 4 },
   ledak:    { label: 'Ledakan',   maks: 80,  baris: 3 },
-  waktu:    { label: 'Kartu game', maks: 120, baris: 4 }   // persegi panjang merah: balasan orang lain tersegel sampai penanya menekan Tampilkan
+  waktu:    { label: 'Kartu game', maks: 120, baris: 4 }   // persegi panjang merah: balasan orang lain tersegel sampai penanya menekan ikon mata
 };
 // bentuk ledakan: bintang bergerigi (jumlah gerigi sengaja sedikit agar jelas di layar HP)
 (function () {
@@ -1131,13 +1131,13 @@ function kompos(kunci, parent, ke) {
   const batal = h('button', { class: 'btn garis', type: 'button',
     onclick: () => { if (parent) { balasTerbuka = null; balasKe = null; } else komposBuka = false; renderAlat(); render(); } }, 'Batal');
   const infoGame = !bisaGame ? null : (indukGame && indukGame.tmr)
-    ? h('div', { class: 'game-toggle' }, h('span', {}, 'Kartu game: isi jawabanmu hanya kamu yang melihat sampai penanya menekan Tampilkan. Satu jawaban per akun.'))
-    : h('label', { class: 'game-toggle' }, h('input', { type: 'checkbox', checked: d.g ? '' : null, onchange: e => { d.g = e.target.checked; } }), h('span', {}, 'Kartu game: isinya hanya kamu yang melihat sampai penanya menekan Tampilkan. Satu kartu game per akun.'));
+    ? h('div', { class: 'game-toggle' }, h('span', {}, 'Kartu game: isi jawabanmu hanya kamu yang melihat sampai penanya menekan ikon mata. Satu jawaban per akun.'))
+    : h('label', { class: 'game-toggle' }, h('input', { type: 'checkbox', checked: d.g ? '' : null, onchange: e => { d.g = e.target.checked; } }), h('span', {}, 'Kartu game: isinya hanya kamu yang melihat sampai penanya menekan ikon mata. Satu kartu game per akun.'));
   if (infoGame && infoGame.querySelector('input')) infoGame.querySelector('input').checked = !!d.g;
   const kontrol = h('div', { class: 'kontrol' }, infoGame, pilihanBentuk, pilihanTeks, pilihanKartu,
     h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
   if (timer) {
-    kontrol.replaceChildren(h('div', { class: 'tmr-pilih' }, h('span', {}, 'Tanpa timer. Balasan orang lain tersegel sampai kamu menekan Tampilkan; hapus kartu dengan tombol \u2715.')), h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
+    kontrol.replaceChildren(h('div', { class: 'tmr-pilih' }, h('span', {}, 'Tanpa timer. Balasan orang lain tersegel sampai kamu menekan ikon mata; hapus kartu dengan tombol \u2715.')), h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
   }
   return h('div', { class: 'kompos' + (parent ? ' popup' : '') }, ke ? h('div', { class: 'ke' }, '↳ membalas @' + ke.username) : null, kartu, kontrol);
 }
@@ -1221,7 +1221,7 @@ function tombolVote(p) {
 function blokSegel(p) {
   const saya = milikSaya.has(p.id) && segelSaya[p.id];
   return h('div', { class: 'segel' },
-    h('span', { class: 'label-segel' }, TANDA_SEGEL + ' TERSEGEL' + (saya ? ' \u00b7 hanya kamu yang melihat' : ' \u00b7 terbuka saat penanya menekan Tampilkan')),
+    h('span', { class: 'label-segel' }, TANDA_SEGEL + ' TERSEGEL' + (saya ? ' \u00b7 hanya kamu yang melihat' : ' \u00b7 terbuka saat penanya menekan ikon mata')),
     saya ? h('p', { class: 'teks', style: 'color:' + p.warna }, segelSaya[p.id])
          : [70, 95, 55].map((w, i) => h('div', { class: 'garis-semu', style: 'width:' + Math.round(w * (.8 + acak(p.id, 'sg' + i) * .2)) + '%' })));
 }
@@ -1294,6 +1294,7 @@ function susunBalasan(daftar) {
   return hasil;
 }
 const IKON_GAME = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z"/></svg>';
+const IKON_MATA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const tersegel = p => !!(p.parent && p.game === 1);
 // game berjalan di kartu ini dan akun ini boleh mengirim kartu game (bukan penanya, belum mengirim jawaban)
 function gameBisa(idKartu) {
@@ -1308,7 +1309,7 @@ async function mulaiRonde(id) {
   } catch (e) { toast(e.message); }
   render();
 }
-// penanya menekan Tampilkan: semua jawaban di bawah kartunya terlihat oleh semua orang
+// penanya menekan ikon mata: semua jawaban di bawah kartunya terlihat oleh semua orang
 async function tampilkan(id, btn) {
   if (!butuhLogin()) return;
   if (btn) btn.disabled = true;
@@ -1329,7 +1330,7 @@ async function bukaRonde(id) {
     if (j && j.ok && j.balasan && j.balasan.length) { j.balasan.forEach(b => { ovBuka[b.id] = b.teks; }); ovGame[id] = 2; dekBuka = id; if (!sedangMengetik()) render(); }
   } catch (e) {}
 }
-// selama ada jawaban tersegel di layar, tanyakan tiap 20 detik apakah penanya sudah menekan Tampilkan
+// selama ada jawaban tersegel di layar, tanyakan tiap 20 detik apakah penanya sudah menekan ikon mata
 function gameCek() {
   const now = Date.now(), perlu = new Set();
   semua().forEach(p => { if (p.parent && p.game === 1) { const q = semua().find(x => x.id === p.parent); if (q && q.game === 1) perlu.add(q.id); } });
@@ -1357,7 +1358,7 @@ function kartuUtama(p, balasan) {
       render(); gulirKompos();
     }),
     (milikSaya.has(p.id) && !p.game && !p.poll && tokenHidup()) ? tombolIkon(IKON_GAME, 'Jadikan kartu game (jawaban orang lain tersegel)', e => { e.stopPropagation(); mulaiRonde(p.id); }) : null,
-    (milikSaya.has(p.id) && p.game === 1 && tokenHidup()) ? h('button', { type: 'button', class: 'btn kecil-teks tampil', 'data-tip': 'Tampilkan semua jawaban', onclick: e => { e.stopPropagation(); tampilkan(p.id, e.currentTarget); } }, 'Tampilkan') : null,
+    (milikSaya.has(p.id) && p.game === 1 && tokenHidup()) ? (() => { const b = tombolIkon(IKON_MATA, 'Tampilkan semua jawaban', e => { e.stopPropagation(); tampilkan(p.id, e.currentTarget); }); b.classList.add('tampil'); return b; })() : null,
     titikTaut(p),
     n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null);
   const labelJam = p.tmr ? h('span', { class: 'label-tmr' }, ikonSvg(IKON_GAME), 'KARTU GAME') : null;
@@ -1423,7 +1424,7 @@ function isiBantuan() {
     ...bagian('Menggeser dan zoom', 'Di mode Acak, papan selebar minimal 6 kolom (layar yang lebih lebar menampilkan lebih banyak kolom) dan dibuka dari tengah. Geser ke samping dengan menyeret latar kosong memakai mouse, Shift + gulir, atau dua jari di trackpad; di HP cukup geser dengan jari. Zoom lewat tombol − dan + di panel Peta kartu, atau Ctrl + gulir (cubit di trackpad), dari 40% sampai 160%; klik angka persennya untuk kembali ke 100%. Memperkecil zoom membantu melihat banyak kartu dan garis koneksi sekaligus. Mode Rapi selalu mengikuti lebar layar. Zoom tidak diingat saat halaman dimuat ulang.'),
     ...bagian('Peta kartu', 'Panel kecil di kiri bawah berisi miniatur seluruh papan (blok abu-abu), dengan kotak berbingkai yang menunjukkan area yang sedang tampak di layar. Klik atau seret di peta untuk berpindah. Klik judulnya untuk melipat panel. Panel hilang otomatis bila seluruh papan sudah muat di satu layar, dan tidak tampil di layar HP.'),
     ...bagian('Menghapus kartu', 'Pembuat kartu atau balasan melihat tombol hitam ✕ (Hapus) di sebelah kiri tombol Balas pada kartunya sendiri; dosen melihatnya di semua kartu, balasan, dan polling. Arahkan kursor ke tombol untuk melihat keterangannya. Klik ✕, lalu klik Ya untuk memastikan (Batal untuk membatalkan). Bila kartu utama dihapus, semua balasan di dalamnya, termasuk balasan orang lain, ikut terhapus, begitu pula suara, pilihan polling, dan garis sambungan ke kartu itu. Polling juga bisa dihapus oleh pembuatnya. Kartu bisa dihapus kapan saja. Kartu yang dihapus tidak bisa dikembalikan dari tampilan ini; salinannya disimpan pengelola di sheet Arsip.'),
-    ...bagian('Kartu game', 'Kartu game adalah kartu persegi panjang merah berjudul KARTU GAME, tanpa timer dan tidak hilang sendiri. Buat dengan tombol berikon kontroler game di ujung kanan deretan bentuk, tulis pertanyaannya, lalu kirim. Orang lain menjawab lewat tombol Balas; jawaban mereka tersegel (bergembok): isinya hanya terlihat oleh pengirimnya sendiri, orang lain hanya melihat gembok. Satu akun satu jawaban, dan pembuat kartu tidak ikut menjawab. Ketika siap, pembuat kartu menekan tombol Tampilkan: semua jawaban langsung terbuka untuk semua orang dan menjadi balasan biasa. Kartu game bisa dibalas, divote, dan disambungkan seperti kartu biasa. Kartu dihapus oleh pembuatnya dengan tombol \u2715, dan semua balasannya ikut terhapus. Dosen juga bisa menghapus kartu siapa pun. Kartu biasa milikmu juga bisa dijadikan kartu game dengan tombol berikon kontroler di dekat tombol Balas.'),
+    ...bagian('Kartu game', 'Kartu game adalah kartu persegi panjang merah berjudul KARTU GAME, tanpa timer dan tidak hilang sendiri. Buat dengan tombol berikon kontroler game di ujung kanan deretan bentuk, tulis pertanyaannya, lalu kirim. Orang lain menjawab lewat tombol Balas; jawaban mereka tersegel (bergembok): isinya hanya terlihat oleh pengirimnya sendiri, orang lain hanya melihat gembok. Satu akun satu jawaban, dan pembuat kartu tidak ikut menjawab. Ketika siap, pembuat kartu menekan ikon mata (Tampilkan): semua jawaban langsung terbuka untuk semua orang dan menjadi balasan biasa. Kartu game bisa dibalas, divote, dan disambungkan seperti kartu biasa. Kartu dihapus oleh pembuatnya dengan tombol \u2715, dan semua balasannya ikut terhapus. Dosen juga bisa menghapus kartu siapa pun. Kartu biasa milikmu juga bisa dijadikan kartu game dengan tombol berikon kontroler di dekat tombol Balas.'),
     ...bagian('Polling', 'Kartu oranye bertanda POLLING berisi satu pertanyaan dengan 2 sampai 5 pilihan. Semua akun terdaftar yang sudah masuk boleh memilih: klik satu pilihan (satu akun satu pilihan), klik pilihan lain untuk mengganti, atau klik pilihan yang sama lagi untuk membatalkan. Hasil berupa persentase dan jumlah suara langsung terlihat oleh semua orang, juga oleh yang belum masuk. Tiap polling punya hitung mundur sendiri di bagian bawah kartu; setelah selesai pilihan terkunci dan pilihan terbanyak diberi bingkai. Polling yang sedang berjalan selalu di posisi pertama, hanya satu polling berjalan pada satu waktu, warnanya oranye di semua tampilan (juga monokrom), tidak bisa dibalas, dan bisa disambungkan seperti kartu biasa. Polling hanya bisa dibuat oleh dosen: setelah masuk, tombol polling di ujung kanan deretan bentuk di bawah layar membuka kartu pembuat polling (pertanyaan, pilihan, dan lama polling: 1 jam, 6 jam, 1 hari, 3 hari, atau 7 hari). Polling ikut dikosongkan oleh reset harian.'),
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
