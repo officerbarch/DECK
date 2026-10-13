@@ -482,6 +482,7 @@ let skew = 0;                 // selisih jam server dan jam perangkat (ms), dipa
 const waktuServer = () => Date.now() + skew;
 let sayaPilih = {};           // pilihan polling akun ini: { idKartu: indeksPilihan }
 let hapusKonfirm = null;      // id kartu yang sedang meminta konfirmasi hapus
+let tombServer = { ids: new Set(), reset: 0 };   // kartu yang dihapus di perangkat lain / waktu reset terakhir (dari server)
 let ovHapus = {};             // id kartu yang baru dihapus di sini (menutupi cache CSV sebentar)
 let ovPoll = {};              // hasil polling terbaru dari server setelah saya memilih
 let statusAkun = 'aktif';     // 'aktif' | 'baru' (belum terdaftar) | 'blokir'
@@ -625,8 +626,12 @@ async function muat(otomatis) {
     let daftar = [];
     if (siap(CONFIG.CSV_URL)) {
       const u = CONFIG.CSV_URL + (CONFIG.CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+      // CSV Google di-cache beberapa menit; daftar kartu yang baru dihapus diambil terpisah (kecil dan langsung dari server)
+      const tomb = siap(CONFIG.SCRIPT_URL) ? fetch(CONFIG.SCRIPT_URL + '?aksi=terhapus', { cache: 'no-store' }).then(x => x.json()).catch(() => null) : Promise.resolve(null);
       const r = await fetch(u, { cache: 'no-store' });
       daftar = dariCSV(await r.text());
+      const tj = await tomb;
+      if (tj && tj.ok) { tombServer = { ids: new Set(tj.ids || []), reset: Number(tj.reset) || 0 }; if (tj.now) skew = tj.now - Date.now(); }
     } else if (siap(CONFIG.SCRIPT_URL)) {
       const r = await fetch(CONFIG.SCRIPT_URL + '?aksi=daftar');
       daftar = (await r.json()).posts || [];
@@ -654,6 +659,9 @@ function semua() {
     const p = m.get(id); if (p && now - o.t < 360000) { p.up = o.up; p.down = o.down; }
   }
   for (const [id, t] of Object.entries(ovHapus)) { if (now - t < 600000) m.delete(id); }
+  if (tombServer.ids.size || tombServer.reset) [...m.values()].forEach(p => {
+    if (tombServer.ids.has(p.id) || (p.parent && tombServer.ids.has(p.parent)) || (tombServer.reset && !lokal.some(l => l.id === p.id) && Date.parse(p.waktu) < tombServer.reset)) m.delete(p.id);
+  });
   for (const [id, o] of Object.entries(ovPoll)) { const p = m.get(id); if (p && p.poll && now - o.t < 360000) p.poll = { ...p.poll, h: o.h.slice() }; }
   { const kini = waktuServer(), mati = new Set(); m.forEach(p => { if (p.habis && p.habis <= kini) mati.add(p.id); }); if (mati.size) [...m.values()].forEach(p => { if (mati.has(p.id) || mati.has(p.parent)) m.delete(p.id); }); }
   for (const [id, t] of Object.entries(ovBuka)) { const p = m.get(id); if (p) { p.teks = t; if (p.parent) p.game = 2; } }
