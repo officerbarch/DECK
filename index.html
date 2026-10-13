@@ -168,6 +168,8 @@
   .item.terbuka > .bingkai path { fill:#e6e6e6; stroke:none; }
   .item { transform:translateX(var(--dx,0)) rotate(var(--rot,0)); margin-top:var(--dy,0); }
   .kepala { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  /* centang dosen selalu biru, di semua tema dan semua jenis kartu (cincin putih tipis agar tetap terlihat di kartu biru/merah/oranye) */
+  .lencana, :root[data-tema] .lencana, :root[data-mono="1"] .lencana, .dek .kartu .lencana, .poll .lencana, .tmr .lencana { background:#1d9bf0 !important; color:#fff !important; box-shadow:0 0 0 1.5px #fff; }
   .lencana { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; margin-left:6px;
              border-radius:50%; background:#1d9bf0; color:#fff; font-size:12px; font-weight:900; line-height:1;
              vertical-align:2px; cursor:help; }
@@ -379,7 +381,6 @@
   .poll .tt { background:#fff; border-color:#fff; }
   .poll .tt::after { background:#111; }
   .poll .tt.aktif { background:#111; } .poll .tt.aktif::after { background:#fff; }
-  .poll .lencana { background:#fff; color:var(--oranye); }
   .poll.tulis input[type=text], .poll.tulis textarea, .poll.tulis select { width:100%; font:inherit; font-size:15px; padding:7px 9px; color:#111; background:#fff; border:2px solid #111; border-radius:0; box-sizing:border-box; margin:6px 0 0; }
   .poll.tulis textarea { resize:vertical; font-size:17px; }
   .poll .poll-baris { display:flex; gap:6px; align-items:center; }
@@ -412,7 +413,6 @@
   .tmr .tt { background:#fff; border-color:#fff; }
   .tmr .tt::after { background:#111; }
   .tmr .tt.aktif { background:#111; } .tmr .tt.aktif::after { background:#fff; }
-  .tmr .lencana { background:#fff; color:var(--merah); }
   .kartu.tulis.tmr input, .kartu.tulis.tmr textarea { color:#fff !important; background:transparent; border-color:#fff; }
   .kartu.tulis.tmr input::placeholder, .kartu.tulis.tmr textarea::placeholder { color:#ffd9db; }
   /* ===== Game: ronde pertanyaan dan kartu game (isi tersegel) ===== */
@@ -430,8 +430,8 @@
   .tmr-pilih { display:flex; align-items:center; gap:8px; font-size:14px; margin:6px 0; }
   .tmr-pilih select { font:inherit; padding:4px 8px; }
   .item.padam { opacity:0; transition:opacity .6s; }
-  .ikon.b-waktu { width:44px; height:34px; margin:0; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z M6 10.1h1.8V8.3h1.4v1.8H11v1.4H9.2v1.8H7.8v-1.8H6z M15 11.1a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z M18 8.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.42.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z M6 10.1h1.8V8.3h1.4v1.8H11v1.4H9.2v1.8H7.8v-1.8H6z M15 11.1a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z M18 8.9a.95.95 0 1 0 0 1.9.95.95 0 0 0 0-1.9z'/%3E%3C/svg%3E") center/contain no-repeat; }   /* ikon kontroler game (kartu timer) */
-  .ikon.kecil.b-waktu { width:40px; height:30px; }
+  .ikon.b-waktu { width:34px; height:34px; margin:0; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cg fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round'%3E%3Ccircle cx='12' cy='13.5' r='6'/%3E%3Cpath d='M12 13.5V10M9.5 5.5h5M12 5.5v2M17 8l1.2-1.2'/%3E%3C/g%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' mask='url(%23m)'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cg fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round'%3E%3Ccircle cx='12' cy='13.5' r='6'/%3E%3Cpath d='M12 13.5V10M9.5 5.5h5M12 5.5v2M17 8l1.2-1.2'/%3E%3C/g%3E%3C/mask%3E%3C/defs%3E%3Crect width='24' height='24' mask='url(%23m)'/%3E%3C/svg%3E") center/contain no-repeat; }   /* kotak dengan stopwatch (kartu timer) */
+  .ikon.kecil.b-waktu { width:26px; height:26px; }
   #tip { position:fixed; z-index:120; padding:5px 9px; font:12px Arial, sans-serif; color:#fff; background:#111; border:1px solid rgba(255,255,255,.55); border-radius:3px; pointer-events:none; white-space:nowrap; transform:translate(-50%, -100%); }
   #tip[hidden] { display:none; }
   html.foto #tip { display:none !important; }
@@ -489,6 +489,7 @@ let dosenSaya = false;        // akun yang masuk adalah dosen (boleh membuat pol
 let pollBuka = false;         // kartu penulis polling sedang terbuka
 let pollDraft = { u: '', q: '', o: ['', ''], menit: 60 };
 const MAKS_TANYA = 120, MAKS_OPSI = 50, MAKS_OPSI_N = 5;   // harus sama dengan Kode.gs
+const DURASI_TIMER = [[5, '5 menit'], [15, '15 menit'], [30, '30 menit']];   // menit; harus sama dengan DURASI_TIMER_MENIT di Kode.gs
 const DURASI = [[15, '15 menit'], [30, '30 menit'], [60, '1 jam'], [120, '2 jam'], [240, '4 jam'], [480, '8 jam']];   // menit; harus sama dengan DURASI_MENIT di Kode.gs
 let dekBuka = null;           // id post yang tumpukan balasannya sedang terbuka (hanya satu)
 let balasKe = null;           // id balasan yang sedang dibalas (null = membalas post induk)
@@ -532,7 +533,7 @@ const BENTUK = {
   lima:     { label: 'Segi lima', maks: 100, baris: 3 },
   tumpul:   { label: 'Persegi panjang', maks: 120, baris: 4 },
   ledak:    { label: 'Ledakan',   maks: 80,  baris: 3 },
-  waktu:    { label: 'Kartu game', maks: 120, baris: 4 }   // persegi panjang merah: balasan orang lain tersegel sampai penanya menekan ikon mata
+  waktu:    { label: 'Kartu timer', maks: 120, baris: 4 }   // persegi panjang merah dengan hitung mundur 5/15/30 menit; hilang sendiri saat habis
 };
 // bentuk ledakan: bintang bergerigi (jumlah gerigi sengaja sedikit agar jelas di layar HP)
 (function () {
@@ -572,7 +573,7 @@ const getWarna = () => cekWarna(localStorage.getItem('deck_warna'));
 const getKartu = () => cekKartu(localStorage.getItem('deck_kartu'));
 const getBentuk = () => { const b = cekBentuk(localStorage.getItem('deck_bentuk')); return b === 'waktu' ? 'persegi' : b; };
 function ambilDraft(kunci) {
-  return draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu(), b: getBentuk() };
+  return draft[kunci] = draft[kunci] || { u: getUser(), t: '', w: getWarna(), k: getKartu(), b: getBentuk(), j: 15 };
 }
 function ubahBentuk(d, b) {
   d.b = b; d.t = d.t.slice(0, BENTUK[b].maks);
@@ -612,7 +613,7 @@ function normal(o) {
            membalas: String(o.membalas || '').slice(0, 40), ke: String(o.ke || '').trim(), bentuk: cekBentuk(o.bentuk), dosen: String(o.dosen || '').trim().toLowerCase() === 'ya',
            up: parseInt(o.up) || 0, down: parseInt(o.down) || 0,
            tautan: String(o.tautan || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, MAKS_TAUTAN),
-           poll: bacaPoll(o.polling), tmr: String(o.bentuk || '').toLowerCase() === 'waktu',
+           poll: bacaPoll(o.polling), tmr: String(o.bentuk || '').toLowerCase() === 'waktu', habis: Number(o.habis) > 0 && String(o.bentuk || '').toLowerCase() === 'waktu' ? Number(o.habis) : 0,
            game: Number(o.game) > 0 ? Number(o.game) : 0 };   // game: 0 tidak ada, 1 berjalan/tersegel, 2 sudah ditampilkan
 }
 
@@ -654,6 +655,7 @@ function semua() {
   }
   for (const [id, t] of Object.entries(ovHapus)) { if (now - t < 600000) m.delete(id); }
   for (const [id, o] of Object.entries(ovPoll)) { const p = m.get(id); if (p && p.poll && now - o.t < 360000) p.poll = { ...p.poll, h: o.h.slice() }; }
+  { const kini = waktuServer(), mati = new Set(); m.forEach(p => { if (p.habis && p.habis <= kini) mati.add(p.id); }); if (mati.size) [...m.values()].forEach(p => { if (mati.has(p.id) || mati.has(p.parent)) m.delete(p.id); }); }
   for (const [id, t] of Object.entries(ovBuka)) { const p = m.get(id); if (p) { p.teks = t; if (p.parent) p.game = 2; } }
   for (const [id, a] of Object.entries(ovGame)) { const p = m.get(id); if (p && p.game < a) p.game = a; }
   for (const [id, o] of Object.entries(ovTautan)) { const p = m.get(id); if (p && now - o.t < 360000) p.tautan = o.a; }
@@ -829,7 +831,7 @@ async function kirim(kunci, parent, btn, ke) {
   if (t.length > BENTUK[d.b].maks) return toast(`Teks terlalu panjang untuk bentuk ini (maks ${BENTUK[d.b].maks}).`);
   btn.disabled = true;
   try {
-    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', membalas: ke ? ke.id : '', warna: d.w, kartu: d.k, bentuk: d.b, game: (parent && !ke && d.g && gameBisa(parent)) ? true : undefined });
+    const j = await panggil({ aksi: 'post', username: u, teks: t, parent: parent || '', membalas: ke ? ke.id : '', warna: d.w, kartu: d.k, bentuk: d.b, menit: d.b === 'waktu' ? d.j : undefined, game: (parent && !ke && gameBisa(parent)) ? true : undefined });
     lokal.push(normal(j.post)); milikSaya.add(j.post.id); setUser(u);
     if (j.segel) segelSaya[j.post.id] = j.segel;
     if (d.b !== 'waktu') { localStorage.setItem('deck_warna', d.w); localStorage.setItem('deck_kartu', d.k); localStorage.setItem('deck_bentuk', d.b); }
@@ -1097,7 +1099,7 @@ function kompos(kunci, parent, ke) {
   const t = h('textarea', { class: 'in-teks', rows: bt.baris, maxlength: maks, placeholder: parent ? 'Tulis balasan…' : 'Tulis di sini…',
                             oninput: e => { d.t = e.target.value; hitung.textContent = `${d.t.length}/${maks}`; } });
   t.value = d.t; t.style.color = d.w;
-  const kartu = h('div', { class: 'kartu tulis b-' + d.b + (timer ? ' tmr' : d.b === 'persegi' ? '' : ' lain') }, timer ? h('span', { class: 'label-tmr' }, ikonSvg(IKON_GAME), 'KARTU GAME') : null, u, t);
+  const kartu = h('div', { class: 'kartu tulis b-' + d.b + (timer ? ' tmr' : d.b === 'persegi' ? '' : ' lain') }, timer ? h('span', { class: 'label-tmr' }, ikonJam(), 'TIMER') : null, u, t);
   if (!timer) kartu.style.background = KARTU[d.k];
 
   const pilihanTeks = h('div', { class: 'warna' });
@@ -1124,19 +1126,16 @@ function kompos(kunci, parent, ke) {
     }))) : null;
 
   const bisaGame = !!(parent && !ke && gameBisa(parent));
-  const indukGame = parent ? semua().find(x => x.id === parent) : null;
-  if (d.g === undefined) d.g = true;
   const kirimBtn = h('button', { class: 'btn', type: 'button', onclick: () => kirim(kunci, parent, kirimBtn, ke) }, 'Kirim');
   const batal = h('button', { class: 'btn garis', type: 'button',
     onclick: () => { if (parent) { balasTerbuka = null; balasKe = null; } else komposBuka = false; renderAlat(); render(); } }, 'Batal');
-  const infoGame = !bisaGame ? null : (indukGame && indukGame.tmr)
-    ? h('div', { class: 'game-toggle' }, h('span', {}, 'Kartu game: isi jawabanmu hanya kamu yang melihat sampai penanya menekan ikon mata. Satu jawaban per akun.'))
-    : h('label', { class: 'game-toggle' }, h('input', { type: 'checkbox', checked: d.g ? '' : null, onchange: e => { d.g = e.target.checked; } }), h('span', {}, 'Kartu game: isinya hanya kamu yang melihat sampai penanya menekan ikon mata. Satu kartu game per akun.'));
-  if (infoGame && infoGame.querySelector('input')) infoGame.querySelector('input').checked = !!d.g;
+  const infoGame = !bisaGame ? null : h('div', { class: 'game-toggle' }, h('span', {}, 'Kartu game: jawabanmu tersegel, hanya kamu yang melihat sampai pembuat kartu menekan ikon mata. Satu jawaban per akun.'));
   const kontrol = h('div', { class: 'kontrol' }, infoGame, pilihanBentuk, pilihanTeks, pilihanKartu,
     h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
   if (timer) {
-    kontrol.replaceChildren(h('div', { class: 'tmr-pilih' }, h('span', {}, 'Tanpa timer. Balasan orang lain tersegel sampai kamu menekan ikon mata; hapus kartu dengan tombol \u2715.')), h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
+    const pil = h('select', { 'aria-label': 'Umur kartu', onchange: e => { d.j = Number(e.target.value); } }, DURASI_TIMER.map(([n, tx]) => h('option', { value: n }, tx)));
+    pil.value = String(d.j);
+    kontrol.replaceChildren(h('div', { class: 'tmr-pilih' }, h('span', {}, 'Kartu hilang setelah:'), pil), h('div', { class: 'baris' }, hitung, h('span', { class: 'tombol' }, batal, kirimBtn)));
   }
   return h('div', { class: 'kompos' + (parent ? ' popup' : '') }, ke ? h('div', { class: 'ke' }, '↳ membalas @' + ke.username) : null, kartu, kontrol);
 }
@@ -1340,6 +1339,11 @@ function gameCek() {
 const IKON_JAM = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>';
 function ikonSvg(svg) { const e = document.createElement('span'); e.style.display = 'inline-flex'; e.innerHTML = svg; return e; }
 function ikonJam() { const e = document.createElement('span'); e.style.display = 'inline-flex'; e.innerHTML = IKON_JAM; return e; }
+const sisaKartu = habis => {
+  const ms = habis - waktuServer(); if (ms <= 0) return 'waktu habis';
+  const d = Math.ceil(ms / 1000), m = Math.floor(d / 60);
+  return 'sisa ' + (m ? m + ':' + String(d % 60).padStart(2, '0') : d + '"');
+};
 function kartuUtama(p, balasan) {
   balasan = susunBalasan(balasan);
   const lain = p.bentuk !== 'persegi' && p.bentuk !== 'waktu';
@@ -1358,12 +1362,12 @@ function kartuUtama(p, balasan) {
       else { bukaDek(p.id); balasTerbuka = p.id; balasKe = null; }
       render(); gulirKompos();
     }),
-    (milikSaya.has(p.id) && !p.game && !p.poll && tokenHidup()) ? tombolIkon(IKON_GAME, 'Jadikan kartu game (jawaban orang lain tersegel)', e => { e.stopPropagation(); mulaiRonde(p.id); }) : null,
+    (milikSaya.has(p.id) && !p.game && !p.poll && !p.tmr && tokenHidup()) ? tombolIkon(IKON_GAME, 'Jadikan kartu game (jawaban orang lain tersegel)', e => { e.stopPropagation(); mulaiRonde(p.id); }) : null,
     (milikSaya.has(p.id) && p.game === 1 && tokenHidup()) ? (() => { const b = tombolIkon(IKON_MATA, 'Tampilkan semua jawaban', e => { e.stopPropagation(); tampilkan(p.id, e.currentTarget); }); b.classList.add('tampil'); return b; })() : null,
     titikTaut(p),
     n ? h('span', {}, n + ' balasan ', h('span', { class: 'panah' }, buka ? '▴' : '▾')) : null);
-  const labelJam = p.tmr ? h('span', { class: 'label-tmr' }, ikonSvg(IKON_GAME), 'KARTU GAME') : null;
-  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') + (p.tmr ? ' tmr' : '') }, labelJam, (p.game && !p.tmr) ? h('span', { class: 'label-game' }, ikonSvg(IKON_GAME), h('span', {}, p.game === 1 ? 'GAME' : 'GAME \u00b7 terbuka')) : null, isiKartu(p), bawah, labelTaut(p));
+  const labelJam = p.habis ? h('span', { class: 'label-tmr' }, ikonJam(), h('span', { class: 'tmr-sisa', 'data-habis': p.habis }, sisaKartu(p.habis))) : null;
+  const kartu = h('article', { class: 'kartu b-' + p.bentuk + (lain ? ' lain' : '') + (p.tmr ? ' tmr' : '') }, labelJam, (p.game) ? h('span', { class: 'label-game' }, ikonSvg(IKON_GAME), h('span', {}, p.game === 1 ? 'GAME' : 'GAME \u00b7 terbuka')) : null, isiKartu(p), bawah, labelTaut(p));
   kartu.dataset.id = p.id;
   kartu.style.background = `color-mix(in srgb, ${KARTU[p.kartu]} 92%, #000)`;   // lapisan paling depan dalam deck
   const dek = h('div', { class: 'deck' + (n ? ' berbalas' : '') });
@@ -1425,7 +1429,8 @@ function isiBantuan() {
     ...bagian('Menggeser dan zoom', 'Di mode Acak, papan selebar minimal 6 kolom (layar yang lebih lebar menampilkan lebih banyak kolom) dan dibuka dari tengah. Geser ke samping dengan menyeret latar kosong memakai mouse, Shift + gulir, atau dua jari di trackpad; di HP cukup geser dengan jari. Zoom lewat tombol − dan + di panel Peta kartu, atau Ctrl + gulir (cubit di trackpad), dari 40% sampai 160%; klik angka persennya untuk kembali ke 100%. Memperkecil zoom membantu melihat banyak kartu dan garis koneksi sekaligus. Mode Rapi selalu mengikuti lebar layar. Zoom tidak diingat saat halaman dimuat ulang.'),
     ...bagian('Peta kartu', 'Panel kecil di kiri bawah berisi miniatur seluruh papan (blok abu-abu), dengan kotak berbingkai yang menunjukkan area yang sedang tampak di layar. Klik atau seret di peta untuk berpindah. Klik judulnya untuk melipat panel. Panel hilang otomatis bila seluruh papan sudah muat di satu layar, dan tidak tampil di layar HP.'),
     ...bagian('Menghapus kartu', 'Pembuat kartu atau balasan melihat tombol hitam ✕ (Hapus) di sebelah kiri tombol Balas pada kartunya sendiri; dosen melihatnya di semua kartu, balasan, dan polling. Arahkan kursor ke tombol untuk melihat keterangannya. Klik ✕, lalu klik Ya untuk memastikan (Batal untuk membatalkan). Bila kartu utama dihapus, semua balasan di dalamnya, termasuk balasan orang lain, ikut terhapus, begitu pula suara, pilihan polling, dan garis sambungan ke kartu itu. Polling juga bisa dihapus oleh pembuatnya. Kartu bisa dihapus kapan saja. Kartu yang dihapus tidak bisa dikembalikan dari tampilan ini; salinannya disimpan pengelola di sheet Arsip.'),
-    ...bagian('Kartu game', 'Kartu game adalah kartu persegi panjang merah berjudul KARTU GAME, tanpa timer dan tidak hilang sendiri. Buat dengan tombol berikon kontroler game di ujung kanan deretan bentuk, tulis pertanyaannya, lalu kirim. Orang lain menjawab lewat tombol Balas; jawaban mereka tersegel (bergembok): isinya hanya terlihat oleh pengirimnya sendiri, orang lain hanya melihat gembok. Satu akun satu jawaban, dan pembuat kartu tidak ikut menjawab. Ketika siap, pembuat kartu menekan ikon mata (Tampilkan): semua jawaban langsung terbuka untuk semua orang dan menjadi balasan biasa. Kartu game bisa dibalas, divote, dan disambungkan seperti kartu biasa. Kartu dihapus oleh pembuatnya dengan tombol \u2715, dan semua balasannya ikut terhapus. Dosen juga bisa menghapus kartu siapa pun. Kartu biasa milikmu juga bisa dijadikan kartu game dengan tombol berikon kontroler di dekat tombol Balas.'),
+    ...bagian('Kartu timer', 'Tombol di ujung kanan deretan bentuk (kotak dengan ikon stopwatch) membuat kartu timer: kartu persegi panjang merah berlabel TIMER. Pilih umur kartu 5, 15, atau 30 menit. Hitung mundur tampil di kartu; saat habis, kartu dan semua balasannya hilang sendiri. Pembuat juga bisa menghapusnya kapan saja dengan \u2715. Kartu timer bisa dibalas, divote, dan disambungkan seperti kartu biasa.'),
+    ...bagian('Kartu game', 'Di kartu biasa milikmu (selain polling dan timer) ada tombol berikon kontroler game di dekat tombol Balas. Klik untuk menjadikannya kartu game: label GAME muncul, dan semua jawaban dari orang lain tersegel (bergembok), isinya hanya terlihat pengirimnya sendiri. Satu akun satu jawaban, dan pembuat kartu tidak ikut menjawab. Ketika siap, pembuat menekan ikon mata di baris tombol kartunya: semua jawaban terbuka untuk semua orang dan menjadi balasan biasa. Kartu game dihapus dengan \u2715 seperti kartu lain; balasannya ikut terhapus.'),
     ...bagian('Polling', 'Kartu oranye bertanda POLLING berisi satu pertanyaan dengan 2 sampai 5 pilihan. Semua akun terdaftar yang sudah masuk boleh memilih: klik satu pilihan (satu akun satu pilihan), klik pilihan lain untuk mengganti, atau klik pilihan yang sama lagi untuk membatalkan. Hasil berupa persentase dan jumlah suara langsung terlihat oleh semua orang, juga oleh yang belum masuk. Tiap polling punya hitung mundur sendiri di bagian bawah kartu; setelah selesai pilihan terkunci dan pilihan terbanyak diberi bingkai. Polling yang sedang berjalan selalu di posisi pertama, hanya satu polling berjalan pada satu waktu, warnanya oranye di semua tampilan (juga monokrom), tidak bisa dibalas, dan bisa disambungkan seperti kartu biasa. Polling hanya bisa dibuat oleh dosen: setelah masuk, tombol polling di ujung kanan deretan bentuk di bawah layar membuka kartu pembuat polling (pertanyaan, pilihan, dan lama polling: 15 menit, 30 menit, 1 jam, 2 jam, 4 jam, atau 8 jam). Polling ikut dikosongkan oleh reset harian.'),
     ...bagian('Urut dan Rapi/Acak', 'Di kanan atas, pilihan "Urut" mengurutkan kartu menurut suara, yang terbaru, atau nama username A–Z. Tombol di sebelahnya menunjukkan kondisi tampilan: "Acak" (kartu tertempel miring seperti biasa) atau "Rapi" (semua kartu tersusun dalam kolom rapi dan semua balasan terbuka); klik untuk berganti. Keduanya hanya mengubah tampilanmu sendiri dan diingat di browser ini; orang lain tidak terpengaruh dan isi papan tidak berubah.'),
     ...bagian('Statistik', 'Kotak "Statistik" di kanan bawah menampilkan jumlah pengguna aktif, kartu, balasan, dan koneksi, serta username yang sedang aktif. Klik judulnya untuk menyembunyikan atau menampilkannya. Yang tampil hanya username, bukan email; pengunjung yang belum masuk hanya terhitung di angka.'),
@@ -1435,7 +1440,7 @@ function isiBantuan() {
     ...bagian('Ringan di perangkat lemah', 'Di perangkat dengan prosesor 4 inti atau kurang, memori 4 GB atau kurang, atau mode hemat data, latar dimatikan sejak awal agar halaman lancar; nyalakan lewat menu tampilan (\u2299 mati/nyala, \u224b spektrum). Bila di perangkat lain halaman terasa patah-patah, latar dimatikan otomatis dan muncul pemberitahuan. Latar spektrum memakai resolusi rendah dan sekitar 33 bingkai per detik, jadi paling ringan di antara pilihan yang menyala.'),
     ...bagian('Ikon sinkron', 'Tiga tanda ^ yang bergerak naik di kiri tombol Urut menandakan halaman sedang menyinkronkan data dengan server (memuat kartu atau menyimpan tindakanmu). Ikon hilang sendiri setelah selesai.'),
     ...bagian('Centang biru', 'Tanda akun dosen yang terverifikasi.'),
-    ...bagian('Reset harian', 'Papan di-reset setiap hari pukul 07.00 WIB (bisa meleset sampai sekitar 15 menit); isinya diarsipkan oleh pengelola. Hitung mundur di samping judul, misalnya [03 jam : 05 menit : 12 detik], menunjukkan sisa waktu sampai papan dikosongkan. Kartu game ikut dikosongkan saat reset.'),
+    ...bagian('Reset harian', 'Papan di-reset setiap hari pukul 07.00 WIB (bisa meleset sampai sekitar 15 menit); isinya diarsipkan oleh pengelola. Hitung mundur di samping judul, misalnya [03 jam : 05 menit : 12 detik], menunjukkan sisa waktu sampai papan dikosongkan. Kartu timer dan game ikut dikosongkan saat reset.'),
     ...bagian('Privasi', 'Email akunmu tidak ditampilkan di papan. Email tetap dicatat di sistem (hanya terlihat oleh pengelola) untuk mencegah suara ganda dan penyalahgunaan.'),
     h('button', { type: 'button', class: 'btn tutup-bantuan', onclick: () => tutupBantuan() }, 'Tutup'));
 }
@@ -1954,7 +1959,15 @@ function tickTimer() {
     if (s.textContent !== t) s.textContent = t;
     if (s.dataset.aktif === '1' && a <= Date.now()) { s.dataset.aktif = ''; habis = true; }
   });
+  const kini = waktuServer();
+  let padam = false;
+  document.querySelectorAll('.tmr-sisa').forEach(sp => {
+    const a = Number(sp.dataset.habis), tx = sisaKartu(a);
+    if (sp.textContent !== tx) sp.textContent = tx;
+    if (a <= kini && !sedangMengetik()) { const it = sp.closest('.item'); if (it && !it.classList.contains('padam')) { it.classList.add('padam'); padam = true; } }
+  });
   gameCek();
+  if (padam) setTimeout(() => { if (!sedangMengetik()) render(); }, 700);
   if (habis && !sedangMengetik()) render();   // polling baru saja selesai: kunci pilihan
 }
 
