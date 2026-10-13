@@ -276,15 +276,6 @@
   :root[data-mono="1"][data-tema="terang"] #sinkron { color:#000; }
   :root[data-mono="1"][data-tema="gelap"] #sinkron { color:#fff; }
   @media (prefers-reduced-motion:reduce) { #sinkron.on .cr { animation:none; opacity:1; } }
-  /* penanda memuat: garis bergerak di atas layar + label kecil */
-  #memuat { position:fixed; left:0; right:0; top:0; height:4px; z-index:60; overflow:hidden; pointer-events:none; opacity:0; transition:opacity .2s; background:rgba(128,128,128,.25); }
-  #memuat.on { opacity:1; }
-  #memuat::before { content:''; position:absolute; top:0; bottom:0; width:35%; background:var(--h); animation:memuat 1s ease-in-out infinite; }
-  #memuat-teks { position:fixed; left:50%; bottom:76px; transform:translateX(-50%); z-index:60; background:var(--h); color:var(--p); font:700 13px Arial, sans-serif; padding:5px 12px; pointer-events:none; opacity:0; transition:opacity .2s; }
-  #memuat-teks.on { opacity:1; }
-  @keyframes memuat { 0% { left:-35%; } 100% { left:100%; } }
-  @media (prefers-reduced-motion:reduce) { #memuat::before { animation:none; width:100%; opacity:.5; } }
-  html.foto #memuat, html.foto #memuat-teks { visibility:hidden !important; }
   #toast { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:var(--h); color:var(--p);
            padding:16px 26px; font-size:16px; line-height:1.4; text-align:center; display:none; max-width:min(90vw, 420px);
            z-index:100; pointer-events:none; box-shadow:0 0 0 6px rgba(255,255,255,.85); }
@@ -461,7 +452,6 @@
 <div id="banner"></div>
 <main class="dek" id="dek"></main>
 <div id="bantuan"></div>
-<div id="memuat" aria-hidden="true"></div><div id="memuat-teks" role="status" aria-live="polite"></div>
 <div id="toast"></div>
 <div id="tip" hidden></div>
 
@@ -629,7 +619,6 @@ function normal(o) {
 /* ================== MUAT DATA ================== */
 async function muat(otomatis) {
   if (otomatis && (document.hidden || sedangMengetik() || (seret && seret.mode === 'tarik'))) return;
-  if (!otomatis) sibukMulai('Memuat kartu\u2026');
   sinkronMulai();
   try {
     let daftar = [];
@@ -649,7 +638,7 @@ async function muat(otomatis) {
     }
     render();
   } catch (e) { if (!otomatis) toast('Gagal memuat data.'); }
-  finally { if (!otomatis) sibukSelesai(); sinkronSelesai(); }
+  finally { sinkronSelesai(); }
 }
 function sedangMengetik() {
   const a = document.activeElement;
@@ -693,25 +682,9 @@ function sinkronSelesai() {
   const sisa = Math.max(0, 700 - (Date.now() - sinkronAwal));
   sinkronTunda = setTimeout(() => { sinkronTunda = null; if (sinkronN) return; const el = document.getElementById('sinkron'); if (el) { el.classList.remove('on'); el.setAttribute('aria-hidden', 'true'); } }, sisa);
 }
-let sibuk = 0, sibukTimer = null;
-// tampilkan penanda hanya bila proses lebih dari 0,4 detik, supaya tidak berkedip
-function sibukMulai(teks) {
-  sibuk++;
-  if (!sibukTimer) sibukTimer = setTimeout(() => {
-    sibukTimer = null; if (!sibuk) return;
-    document.getElementById('memuat').classList.add('on');
-    const t = document.getElementById('memuat-teks'); t.textContent = teks || 'Memuat\u2026'; t.classList.add('on');
-  }, 400);
-}
-function sibukSelesai() {
-  sibuk = Math.max(0, sibuk - 1);
-  if (sibuk) return;
-  if (sibukTimer) { clearTimeout(sibukTimer); sibukTimer = null; }
-  document.getElementById('memuat').classList.remove('on'); document.getElementById('memuat-teks').classList.remove('on');
-}
 async function panggil(isi) {
-  sibukMulai('Menyimpan\u2026'); if (isi.aksi !== 'hadir') sinkronMulai();
-  try { return await panggilInti(isi); } finally { sibukSelesai(); if (isi.aksi !== 'hadir') sinkronSelesai(); }
+  if (isi.aksi !== 'hadir') sinkronMulai();
+  try { return await panggilInti(isi); } finally { if (isi.aksi !== 'hadir') sinkronSelesai(); }
 }
 async function panggilInti(isi) {
   if (!siap(CONFIG.SCRIPT_URL)) throw new Error('SCRIPT_URL belum diisi.');
